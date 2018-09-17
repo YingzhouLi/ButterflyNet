@@ -85,14 +85,19 @@ for lvl in range(0,nlvl):
 tfMidDenseVars = []
 tfMidBiasVars = []
 for itk in range(0,2**(int(nlvl/2))):
-    varLabel = "LVL_Mid_%04d" % (itk)
-    denseVar = tf.Variable(
-            tf.random_normal([channel_siz,channel_siz]), 
-            name="Dense_"+varLabel )
-    biasVar = tf.Variable(tf.zeros([channel_siz]),
-            name="Bias_"+varLabel )
-    tfMidDenseVars.append(denseVar)
-    tfMidBiasVars.append(biasVar)
+    tmpMidDenseVars = []
+    tmpMidBiasVars = []
+    for itx in range(0,2**(int(nlvl/2))):
+        varLabel = "LVL_Mid_%04d_%04d" % (itk,itx)
+        denseVar = tf.Variable(
+                tf.random_normal([channel_siz,channel_siz]), 
+                name="Dense_"+varLabel )
+        biasVar = tf.Variable(tf.zeros([channel_siz]),
+                name="Bias_"+varLabel )
+        tmpMidDenseVars.append(denseVar)
+        tmpMidBiasVars.append(biasVar)
+    tfMidDenseVars.append(list(tmpMidDenseVars))
+    tfMidBiasVars.append(list(tmpMidBiasVars))
 
 tfOutFilterVars = []
 for itk in range(0,2**(lvl+1)):
@@ -133,13 +138,16 @@ def butterfly_net(in_data):
 
     lvl = int(nlvl/2) - 1
     for itk in range(0,2**(int(nlvl/2))):
-        tfVars[lvl][itk] = tf.reshape(tfVars[lvl][itk],
-                shape=(np.size(in_data,0)*2**(int(nlvl/2)), channel_siz))
-        tfVars[lvl][itk] = tf.matmul(tfVars[lvl][itk],tfMidDenseVars[itk])
-        tfVars[lvl][itk] = tf.reshape(tfVars[lvl][itk],
-                shape=(np.size(in_data,0), 2**(int(nlvl/2)), channel_siz))
-        tfVars[lvl][itk] = tf.nn.relu( tf.nn.bias_add(
-                tfVars[lvl][itk], tfMidBiasVars[itk] ) )
+        tmpVars = np.reshape([],(np.size(in_data,0),0,channel_siz))
+        for itx in range(0,2**(int(nlvl/2))):
+            tmpVar = tfVars[lvl][itk][:,itx,:]
+            tmpVar = tf.matmul(tmpVar,tfMidDenseVars[itk][itx])
+            tmpVar = tf.nn.relu( tf.nn.bias_add(
+                tmpVar, tfMidBiasVars[itk][itx] ) )
+            tmpVar = tf.reshape(tmpVar,
+                    (np.size(in_data,0),1,channel_siz))
+            tmpVars = tf.concat([tmpVars, tmpVar], axis=1)
+        tfVars[lvl][itk] = tmpVars
 
     for lvl in range(int(nlvl/2),nlvl):
         tmpVars = []
