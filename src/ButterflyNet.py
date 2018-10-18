@@ -1,4 +1,5 @@
 import math
+import sys
 import numpy as np 
 import scipy.io as spio
 import tensorflow as tf
@@ -7,8 +8,9 @@ from matplotlib import pyplot as plt
 #=========================================================
 # Read data from file
 #---------------------------------------------------------
+data_fname = 'data_DFT_smooth.mat'
 
-mat = spio.loadmat('data_DFT.mat',squeeze_me=False)
+mat = spio.loadmat(data_fname,squeeze_me=False)
 
 n_train = int(mat['n_train'])
 n_test = int(mat['n_test'])
@@ -22,6 +24,7 @@ x_test = np.float32(mat['x_test'])
 x_test = np.reshape(x_test,(n_test,in_siz,1))
 y_test = np.float32(mat['y_test'])
 y_test = np.reshape(y_test,(n_test,out_siz,1))
+print('Data File Name: %s' % (data_fname))
 print(np.shape(x_train))
 print(np.shape(y_train))
 print(np.shape(x_test))
@@ -32,7 +35,7 @@ print(np.shape(y_test))
 
 #----- Tunable Parameters of BNet
 batch_siz = 10 # Batch size during traning
-channel_siz = 12 # Num of interp pts on each dim
+channel_siz = 16 # Num of interp pts on each dim
 
 adam_learning_rate = 0.01
 adam_beta1 = 0.9
@@ -47,6 +50,16 @@ nlvl = 2*math.floor(math.log(min(in_siz,out_siz),2)/2)
 # Filter size for the input and output
 in_filter_siz = int(in_siz/2**nlvl)
 out_filter_siz = int(out_siz/2**nlvl)
+
+print("======== Parameters =========")
+print("Batch Size:   %6d" % (batch_siz))
+print("Channel Size: %6d" % (channel_siz))
+print("ADAM LR:      %6.4f" % (adam_learning_rate))
+print("ADAM Beta1:   %6.4f" % (adam_beta1))
+print("ADAM Beta2:   %6.4f" % (adam_beta2))
+print("Max Iter:     %6d" % (max_iter))
+print("Num Levels:   %6d" % (nlvl))
+print("=============================")
 
 #=========================================================
 #----- Variable Preparation
@@ -105,6 +118,12 @@ for itk in range(0,2**(lvl+1)):
     filterVar = tf.Variable( tf.random_normal(
         [1, channel_siz, out_filter_siz]), name="Filter_"+varLabel )
     tfOutFilterVars.append(filterVar)
+
+n_para = np.sum([np.prod(v.get_shape().as_list()) for v in
+    tf.trainable_variables()])
+
+print("Total Num Paras:     %6d" % (n_para))
+
 
 #=========================================================
 #----- Structure Preparation
@@ -179,7 +198,6 @@ def butterfly_net(in_data):
 y_train_output = butterfly_net(x_train)
 y_test_output = butterfly_net(x_test)
 
-
 loss_train = tf.reduce_mean(
         tf.squared_difference(y_train, y_train_output))
 loss_test = tf.reduce_mean(
@@ -210,5 +228,6 @@ for it in range(max_iter):
         temp_test_loss = sess.run(loss_test,feed_dict=test_dict)
         hist_loss_train.append(temp_train_loss)
         hist_loss_test.append(temp_test_loss)
-        print("Iter # %6d: Train Loss: %10.4f; Test Loss: %10.4f." % (it+1,
+        print("Iter # %6d: Train Loss: %10e; Test Loss: %10e." % (it+1,
                 temp_train_loss, temp_test_loss))
+        sys.stdout.flush()
