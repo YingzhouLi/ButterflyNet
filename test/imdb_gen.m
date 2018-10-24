@@ -6,7 +6,9 @@ xx = ((0:N-1)/N)';
 kk = (-N/8:(N/8-1))';
 
 in_siz = length(xx);
+in_range = [0,1];
 out_siz = length(kk);
+out_range = [-N/8, N/8];
 
 DFT = funFT(kk,xx);
 
@@ -28,7 +30,8 @@ y_norm = sqrt(sum(y_test.*y_test,2));
 x_test = x_test./(y_norm*ones(1,size(x_test,2)));
 y_test = y_test./(y_norm*ones(1,size(y_test,2)));
 
-save('data_DFT.mat', 'n_train', 'n_test', 'in_siz', 'out_siz', ...
+save('data_DFT.mat', 'n_train', 'n_test', 'in_siz', 'in_range', ...
+    'out_siz', 'out_range', ...
     'x_train', 'y_train', 'x_test', 'y_test', '-v7');
 
 function [x_data,y_data] = rand_real_smooth(DFT,n,kk)
