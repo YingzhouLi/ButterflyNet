@@ -67,6 +67,10 @@ print("ADAM Beta1:   %6.4f" % (adam_beta1))
 print("ADAM Beta2:   %6.4f" % (adam_beta2))
 print("Max Iter:     %6d" % (max_iter))
 print("Num Levels:   %6d" % (nlvl))
+print("Prefix Coef:  %r" % (prefixed))
+if prefixed:
+    print("In Range:     (%6.2f, %6.2f)" % (in_range[0,0], in_range[0,1]))
+    print("Out Range:    (%6.2f, %6.2f)" % (out_range[0,0], out_range[0,1]))
 print("=============================")
 
 #=========================================================
@@ -84,8 +88,10 @@ testOutData = tf.placeholder(tf.float32, shape=(n_test,out_siz,1),
 
 #=========================================================
 #----- Training Preparation
-butterfly_net = ButterflyLayer(out_siz, in_filter_siz, out_filter_siz,
-        channel_siz, nlvl)
+butterfly_net = ButterflyLayer(in_siz, out_siz,
+        in_filter_siz, out_filter_siz,
+        channel_siz, nlvl, prefixed,
+        in_range, out_range)
 y_train_output = butterfly_net(tf.convert_to_tensor(x_train))
 y_test_output = butterfly_net(tf.convert_to_tensor(x_test))
 

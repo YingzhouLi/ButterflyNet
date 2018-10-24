@@ -2,13 +2,19 @@ import math
 import numpy as np
 import tensorflow as tf
 
+from LagrangeMat import LagrangeMat
+
 class ButterflyLayer(tf.keras.layers.Layer):
     #==================================================================
     # Initialize parameters in the layer
-    def __init__(self, out_siz, in_filter_siz = -1, out_filter_siz = -1,
-            channel_siz = 12, nlvl = -1, prefixed = False):
+    def __init__(self, in_siz, out_siz,
+            in_filter_siz = -1, out_filter_siz = -1,
+            channel_siz = 12, nlvl = -1, prefixed = False,
+            in_range = [], out_range = []):
         super(ButterflyLayer, self).__init__()
+        self.in_siz         = in_siz
         self.out_siz        = out_siz
+        #TODO: set the default values based on in_siz and out_siz
         self.in_filter_siz  = in_filter_siz
         self.out_filter_siz = out_filter_siz
         self.channel_siz    = channel_siz
