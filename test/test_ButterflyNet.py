@@ -12,7 +12,7 @@ from ButterflyLayer import ButterflyLayer
 #=========================================================
 # Read data from file
 #---------------------------------------------------------
-data_fname = 'data_DFT.mat'
+data_fname = 'data_DFT_smooth.mat'
 
 mat = spio.loadmat(data_fname,squeeze_me=False)
 
@@ -39,7 +39,7 @@ print(np.shape(y_test))
 #=========================================================
 #----- Parameters Setup
 
-prefixed = True
+prefixed = False
 
 #----- Tunable Parameters of BNet
 batch_siz = 10 # Batch size during traning
@@ -60,18 +60,16 @@ in_filter_siz = int(in_siz/2**nlvl)
 out_filter_siz = int(out_siz/2**nlvl)
 
 print("======== Parameters =========")
-print("Batch Size:   %6d" % (batch_siz))
-print("Channel Size: %6d" % (channel_siz))
-print("ADAM LR:      %6.4f" % (adam_learning_rate))
-print("ADAM Beta1:   %6.4f" % (adam_beta1))
-print("ADAM Beta2:   %6.4f" % (adam_beta2))
-print("Max Iter:     %6d" % (max_iter))
-print("Num Levels:   %6d" % (nlvl))
-print("Prefix Coef:  %r" % (prefixed))
-if prefixed:
-    print("In Range:     (%6.2f, %6.2f)" % (in_range[0,0], in_range[0,1]))
-    print("Out Range:    (%6.2f, %6.2f)" % (out_range[0,0], out_range[0,1]))
-print("=============================")
+print("Batch Size:    %6d" % (batch_siz))
+print("Channel Size:  %6d" % (channel_siz))
+print("ADAM LR:       %6.4f" % (adam_learning_rate))
+print("ADAM Beta1:    %6.4f" % (adam_beta1))
+print("ADAM Beta2:    %6.4f" % (adam_beta2))
+print("Max Iter:      %6d" % (max_iter))
+print("Num Levels:    %6d" % (nlvl))
+print("Prefix Coef:   %6r" % (prefixed))
+print("In Range:     (%6.2f, %6.2f)" % (in_range[0,0], in_range[0,1]))
+print("Out Range:    (%6.2f, %6.2f)" % (out_range[0,0], out_range[0,1]))
 
 #=========================================================
 #----- Variable Preparation
