@@ -43,7 +43,7 @@ prefixed = False
 
 #----- Tunable Parameters of BNet
 batch_siz = 10 # Batch size during traning
-channel_siz = 16 # Num of interp pts on each dim
+channel_siz = 8 # Num of interp pts on each dim
 
 adam_learning_rate = 0.01
 adam_beta1 = 0.9
