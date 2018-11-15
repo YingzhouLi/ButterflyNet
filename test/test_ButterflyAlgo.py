@@ -25,10 +25,6 @@ x_train = np.reshape(x_train,(n_train,in_siz,1))
 y_train = np.float32(mat['y_train'])
 y_train = np.reshape(y_train,(n_train,out_siz,1))
 
-n_train = 1
-x_train = x_train[0:n_train,:,:]
-y_train = y_train[0:n_train,:,:]
-
 print('Data File Name: %s' % (data_fname))
 print(np.shape(x_train))
 print(np.shape(y_train))
