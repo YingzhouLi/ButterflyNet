@@ -4,7 +4,6 @@ import math
 import numpy as np
 import scipy.io as spio
 import tensorflow as tf
-from matplotlib import pyplot as plt
 
 from ButterflyLayer import ButterflyLayer
 
@@ -40,7 +39,7 @@ print(np.shape(y_train))
 prefixed = True
 
 #----- Tunable Parameters of BNet
-channel_siz = 16 # Num of interp pts on each dim
+channel_siz = 32 # Num of interp pts on each dim
 
 #----- Self-adjusted Parameters of BNet
 # Num of levels of the BF struct, must be a even num
@@ -85,3 +84,4 @@ sess.run(init)
 train_dict = {trainInData: x_train, trainOutData: y_train}
 train_loss = sess.run(loss_train,feed_dict=train_dict)
 print("Train Loss: %10e." % (train_loss))
+sess.close()

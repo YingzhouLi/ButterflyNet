@@ -89,23 +89,23 @@ class ButterflyLayer(tf.keras.layers.Layer):
                     Var01 = tf.nn.conv1d(tfVars[lvl-1][itx],
                         self.FilterVars[lvl][2*itx],
                         stride=2, padding='VALID')
-                    Var01 = tf.nn.relu(tf.nn.bias_add(Var,
+                    Var01 = tf.nn.relu(tf.nn.bias_add(Var01,
                         self.BiasVars[lvl][2*itx]))
                     Var02 = tf.nn.conv1d(tfVars[lvl-1][itx],
                         self.FilterVars[lvl][2*itx+1],
                         stride=2, padding='VALID')
-                    Var02 = tf.nn.relu(tf.nn.bias_add(Var,
+                    Var02 = tf.nn.relu(tf.nn.bias_add(Var02,
                         self.BiasVars[lvl][2*itx+1]))
                 else:
                     Var11 = tf.nn.conv1d(tfVars[lvl-1][itx],
                         self.FilterVars[lvl][2*itx],
                         stride=2, padding='VALID')
-                    Var11 = tf.nn.relu(tf.nn.bias_add(Var,
+                    Var11 = tf.nn.relu(tf.nn.bias_add(Var11,
                         self.BiasVars[lvl][2*itx]))
                     Var12 = tf.nn.conv1d(tfVars[lvl-1][itx],
                         self.FilterVars[lvl][2*itx+1],
                         stride=2, padding='VALID')
-                    Var12 = tf.nn.relu(tf.nn.bias_add(Var,
+                    Var12 = tf.nn.relu(tf.nn.bias_add(Var12,
                         self.BiasVars[lvl][2*itx+1]))
 
                     Vars = np.reshape([], (np.size(in_data,0), 0,
@@ -126,8 +126,33 @@ class ButterflyLayer(tf.keras.layers.Layer):
                     tmpVars.append(Vars)
             tfVars.append(list(tmpVars))
 
+        lvl = self.nlvl
+        tmpVars = []
+        Var1 = tf.nn.conv1d(tfVars[lvl-1][0],
+            self.FilterVars[lvl][0],
+            stride=2, padding='VALID')
+        Var1 = tf.nn.relu(tf.nn.bias_add(Var1,
+            self.BiasVars[lvl][0]))
+        Var2 = tf.nn.conv1d(tfVars[lvl-1][0],
+            self.FilterVars[lvl][1],
+            stride=2, padding='VALID')
+        Var2 = tf.nn.relu(tf.nn.bias_add(Var2,
+            self.BiasVars[lvl][1]))
+
+        Vars = np.reshape([], (np.size(in_data,0), 0,
+            self.channel_siz))
+        for itk in range(0,2**(lvl-1)):
+            Var = tf.reshape(Var1[:,itk,:],
+                (np.size(in_data,0),1,self.channel_siz))
+            Vars = tf.concat([Vars, Var], axis=1)
+            Var = tf.reshape(Var2[:,itk,:],
+                (np.size(in_data,0),1,self.channel_siz))
+            Vars = tf.concat([Vars, Var], axis=1)
+        tmpVars.append(Vars)
+        tfVars.append(list(tmpVars))
+
         # coef_filter of size filter_size*in_channels*out_channels
-        OutInterp = tf.nn.conv1d(tfVars[self.nlvl-1][0],
+        OutInterp = tf.nn.conv1d(tfVars[self.nlvl][0],
             self.OutFilterVar, stride=1, padding='VALID')
 
         out_data = tf.reshape(OutInterp,shape=(np.size(in_data,0),
@@ -234,8 +259,8 @@ class ButterflyLayer(tf.keras.layers.Layer):
                 1)/2
         x1Nodes = ChebNodes/2
         x2Nodes = ChebNodes/2 + 1/2
-        LMat1 = LagrangeMat(x1Nodes,xNodes)
-        LMat2 = LagrangeMat(x2Nodes,xNodes)
+        LMat1 = LagrangeMat(ChebNodes,x1Nodes)
+        LMat2 = LagrangeMat(ChebNodes,x2Nodes)
 
         self.FilterVars = []
         self.BiasVars = []
@@ -249,7 +274,7 @@ class ButterflyLayer(tf.keras.layers.Layer):
 
                 mat = np.empty((2, self.channel_siz, self.channel_siz))
                 kcen = (self.out_range[1] \
-                        - self.out_range[0])/2**lvl*itk \
+                        - self.out_range[0])/2**lvl*(itk+0.5) \
                         + self.out_range[0]
                 xlen = (self.in_range[1] - \
                         self.in_range[0])/2**(self.nlvl-lvl)
@@ -327,8 +352,8 @@ class ButterflyLayer(tf.keras.layers.Layer):
 
                 for iti in range(0,NG):
                     for itj in range(0,NG):
-                        KVal = np.exp( -2*math.pi*1j
-                                *kNodes[iti]*xNodes[itj])
+                        KVal = np.exp( - 2*math.pi*1j
+                                *kNodes[itj]*xNodes[iti])
                         mat[4*iti  ,4*itj  ] =   KVal.real
                         mat[4*iti+1,4*itj  ] = - KVal.imag
                         mat[4*iti+2,4*itj  ] = - KVal.real
@@ -358,7 +383,9 @@ class ButterflyLayer(tf.keras.layers.Layer):
         LMat2 = LagrangeMat(ChebNodes,k2Nodes)
 
         for lvl in range(int(self.nlvl/2)+1,self.nlvl+1):
-            for itx in range(0,2**(self.nlvl-lvl)):
+            tmpFilterVars = []
+            tmpBiasVars = []
+            for itx in range(0,2**(self.nlvl-lvl+1)):
                 varLabel = "LVL_%02d_%04d" % (lvl, itx)
                 mat = np.empty((2, self.channel_siz, self.channel_siz))
                 if itx % 2 == 0:
@@ -373,7 +400,8 @@ class ButterflyLayer(tf.keras.layers.Layer):
                 for it in range(0,NG):
                     trueitx = int(itx/2)*2
                     xcen = (self.in_range[1] \
-                        - self.in_range[0])/2**(self.nlvl-lvl)*trueitx \
+                        - self.in_range[0]) \
+                        / 2**(self.nlvl-lvl)*(trueitx+0.5) \
                         + self.in_range[0]
                     KVal = np.exp( -2*math.pi*1j * xcen *
                             (kNodes[it]-ChebNodes) * klen)
@@ -398,7 +426,8 @@ class ButterflyLayer(tf.keras.layers.Layer):
 
                     trueitx = int(itx/2)*2+1
                     xcen = (self.in_range[1] \
-                        - self.in_range[0])/2**(self.nlvl-lvl)*trueitx \
+                        - self.in_range[0]) \
+                        / 2**(self.nlvl-lvl)*(trueitx+0.5) \
                         + self.in_range[0]
                     KVal = np.exp( -2*math.pi*1j * xcen *
                             (kNodes[it]-ChebNodes) * klen)
