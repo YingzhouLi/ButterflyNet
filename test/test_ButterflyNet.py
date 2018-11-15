@@ -20,8 +20,8 @@ n_train = int(mat['n_train'])
 n_test = int(mat['n_test'])
 in_siz = int(mat['in_siz']) # Length of input vector
 out_siz = int(mat['out_siz']) # Length of output vector
-in_range = np.float32(mat['in_range'])
-out_range = np.float32(mat['out_range'])
+in_range = np.squeeze(np.float32(mat['in_range']))
+out_range = np.squeeze(np.float32(mat['out_range']))
 x_train = np.float32(mat['x_train'])
 x_train = np.reshape(x_train,(n_train,in_siz,1))
 y_train = np.float32(mat['y_train'])
@@ -39,11 +39,11 @@ print(np.shape(y_test))
 #=========================================================
 #----- Parameters Setup
 
-prefixed = False
+prefixed = True
 
 #----- Tunable Parameters of BNet
 batch_siz = 10 # Batch size during traning
-channel_siz = 8 # Num of interp pts on each dim
+channel_siz = 16 # Num of interp pts on each dim
 
 adam_learning_rate = 0.01
 adam_beta1 = 0.9
@@ -68,8 +68,8 @@ print("ADAM Beta2:    %6.4f" % (adam_beta2))
 print("Max Iter:      %6d" % (max_iter))
 print("Num Levels:    %6d" % (nlvl))
 print("Prefix Coef:   %6r" % (prefixed))
-print("In Range:     (%6.2f, %6.2f)" % (in_range[0,0], in_range[0,1]))
-print("Out Range:    (%6.2f, %6.2f)" % (out_range[0,0], out_range[0,1]))
+print("In Range:     (%6.2f, %6.2f)" % (in_range[0], in_range[1]))
+print("Out Range:    (%6.2f, %6.2f)" % (out_range[0], out_range[1]))
 
 #=========================================================
 #----- Variable Preparation
@@ -116,8 +116,7 @@ for it in range(max_iter):
     rand_x = x_train[rand_index,:,:]
     rand_y = y_train[rand_index,:,:]
     train_dict = {trainInData: rand_x, trainOutData: rand_y}
-    sess.run(train_step, feed_dict=train_dict)
-    if (it+1) % report_freq == 0:
+    if it % report_freq == 0:
         temp_train_loss = sess.run(loss_train,feed_dict=train_dict)
         test_dict = {testInData: x_test, testOutData: y_test}
         temp_test_loss = sess.run(loss_test,feed_dict=test_dict)
@@ -126,3 +125,4 @@ for it in range(max_iter):
         print("Iter # %6d: Train Loss: %10e; Test Loss: %10e." % (it+1,
                 temp_train_loss, temp_test_loss))
         sys.stdout.flush()
+    sess.run(train_step, feed_dict=train_dict)
