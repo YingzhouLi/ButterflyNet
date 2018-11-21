@@ -1,3 +1,5 @@
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import sys
 sys.path.insert(0,"../src")
 import math
@@ -25,9 +27,12 @@ x_train = np.reshape(x_train,(n_train,in_siz,1))
 y_train = np.float32(mat['y_train'])
 y_train = np.reshape(y_train,(n_train,out_siz,1))
 
+print("========== Inputs ===========")
 print('Data File Name: %s' % (data_fname))
-print(np.shape(x_train))
-print(np.shape(y_train))
+print("X train shape:   (%6d, %6d)" %
+        (x_train.shape[0],x_train.shape[1]) )
+print("Y train shape:   (%6d, %6d)" %
+        (y_train.shape[0],y_train.shape[1]) )
 
 #=========================================================
 #----- Parameters Setup
@@ -35,7 +40,7 @@ print(np.shape(y_train))
 prefixed = True
 
 #----- Tunable Parameters of BNet
-channel_siz = 32 # Num of interp pts on each dim
+channel_siz = 8 # Num of interp pts on each dim
 
 #----- Self-adjusted Parameters of BNet
 # Num of levels of the BF struct, must be a even num
@@ -45,11 +50,11 @@ in_filter_siz = in_siz//2**nlvl
 out_filter_siz = out_siz//2**nlvl
 
 print("======== Parameters =========")
-print("Channel Size:  %6d" % (channel_siz))
-print("Num Levels:    %6d" % (nlvl))
-print("Prefix Coef:   %6r" % (prefixed))
-print("In Range:     (%6.2f, %6.2f)" % (in_range[0], in_range[1]))
-print("Out Range:    (%6.2f, %6.2f)" % (out_range[0], out_range[1]))
+print("Channel Size:     %6d" % (channel_siz))
+print("Num Levels:       %6d" % (nlvl))
+print("Prefix Coef:      %6r" % (prefixed))
+print("In Range:        (%6.2f, %6.2f)" % (in_range[0], in_range[1]))
+print("Out Range:       (%6.2f, %6.2f)" % (out_range[0], out_range[1]))
 
 #=========================================================
 #----- Variable Preparation
@@ -73,6 +78,9 @@ loss_train = tf.reduce_mean(
 
 # Initialize Variables
 init = tf.global_variables_initializer()
+
+print("Total Num Paras:  %6d" % ( np.sum( [np.prod(v.get_shape().as_list())
+    for v in tf.trainable_variables()]) ))
 
 #=========================================================
 #----- Step by Step Training

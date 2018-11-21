@@ -1,8 +1,9 @@
 N = 2^6;
-n_train = 10;
+n_train = 25600;
 n_test = 100;
 
 smooth = 1;
+seqdata = 1;
 
 xx = ((0:N-1)/N)';
 kk = (0:(N/8-1))';
@@ -43,8 +44,29 @@ else
     fname = 'data_DFT_smooth.mat';
 end
 save(fname, 'n_train', 'n_test', 'in_siz', 'in_range', ...
-   'out_siz', 'out_range', ...
-   'x_train', 'y_train', 'x_test', 'y_test', '-v7');
+    'out_siz', 'out_range', ...
+    'x_train', 'y_train', 'x_test', 'y_test', '-v7');
+
+if seqdata
+    tot_n_train = n_train;
+    tot_x_train = x_train;
+    tot_y_train = y_train;
+    initsiz = 100;
+    while initsiz <= tot_n_train
+        if ~smooth
+            fname = ['data_DFT_' sprintf('%06d',initsiz) '.mat'];
+        else
+            fname = ['data_DFT_smooth_' sprintf('%06d',initsiz) '.mat'];
+        end
+        n_train = initsiz;
+        x_train = tot_x_train(1:n_train,:);
+        y_train = tot_y_train(1:n_train,:);
+        save(fname, 'n_train', 'n_test', 'in_siz', 'in_range', ...
+            'out_siz', 'out_range', ...
+            'x_train', 'y_train', 'x_test', 'y_test', '-v7');
+        initsiz = 4*initsiz;
+    end
+end
 
 function [x_data,y_data] = rand_real_smooth(DFT,n,kk)
 lenk = length(kk);

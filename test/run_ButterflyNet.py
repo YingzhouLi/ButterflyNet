@@ -14,7 +14,9 @@ from ButterflyLayer import ButterflyLayer
 #=========================================================
 # Read data from file
 #---------------------------------------------------------
-data_fname = 'data_DFT_smooth.mat'
+data_fname = sys.argv[1]
+
+print(data_fname)
 
 mat = spio.loadmat(data_fname,squeeze_me=False)
 
@@ -47,17 +49,17 @@ print("Y test shape:    (%6d, %6d)" %
 #=========================================================
 #----- Parameters Setup
 
-prefixed = True
-
 #----- Tunable Parameters of BNet
-batch_siz = 10 # Batch size during traning
-channel_siz = 16 # Num of interp pts on each dim
+batch_siz = int(sys.argv[2]) # Batch size during traning
+channel_siz = int(sys.argv[3]) # Num of interp pts on each dim
+
+prefixed = bool(sys.argv[4])
 
 adam_learning_rate = 0.01
 adam_beta1 = 0.9
 adam_beta2 = 0.999
 
-max_iter = 100000 # Maximum num of iterations
+max_iter = n_train//batch_siz*200 # Maximum num of iterations
 report_freq = 10 # Frequency of reporting
 
 #----- Self-adjusted Parameters of BNet
