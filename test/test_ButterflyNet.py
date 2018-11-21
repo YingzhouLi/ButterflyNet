@@ -54,10 +54,10 @@ report_freq = 10 # Frequency of reporting
 
 #----- Self-adjusted Parameters of BNet
 # Num of levels of the BF struct, must be a even num
-nlvl = 2*math.floor(math.log(min(in_siz,out_siz),2)/2)
+nlvl = 2*math.floor(math.log(min(in_siz,out_siz//2),2)/2)
 # Filter size for the input and output
-in_filter_siz = int(in_siz/2**nlvl)
-out_filter_siz = int(out_siz/2**nlvl)
+in_filter_siz = in_siz//2**nlvl
+out_filter_siz = out_siz//2**nlvl
 
 print("======== Parameters =========")
 print("Batch Size:    %6d" % (batch_siz))

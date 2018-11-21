@@ -9,7 +9,7 @@ class ButterflyLayer(tf.keras.layers.Layer):
     # Initialize parameters in the layer
     def __init__(self, in_siz, out_siz,
             in_filter_siz = -1, out_filter_siz = -1,
-            channel_siz = 12, nlvl = -1, prefixed = False,
+            channel_siz = 8, nlvl = -1, prefixed = False,
             in_range = [], out_range = []):
         super(ButterflyLayer, self).__init__()
         self.in_siz         = in_siz
@@ -458,7 +458,7 @@ class ButterflyLayer(tf.keras.layers.Layer):
             self.FilterVars.append(list(tmpFilterVars))
             self.BiasVars.append(list(tmpBiasVars))
 
-        kNodes = np.arange(0,1,1.0/self.out_filter_siz)
+        kNodes = np.arange(0,1,2.0/self.out_filter_siz)
         LMat = LagrangeMat(ChebNodes,kNodes)
 
         #----------------
@@ -466,13 +466,17 @@ class ButterflyLayer(tf.keras.layers.Layer):
         mat = np.empty((1,self.channel_siz,self.out_filter_siz))
         xcen = np.mean(self.in_range)
         klen = (self.out_range[1] - self.out_range[0])/2**self.nlvl
-        for it in range(0,self.out_filter_siz):
+        for it in range(0,self.out_filter_siz//2):
             KVal = np.exp(-2*math.pi*1j*xcen*(kNodes[it]-ChebNodes)*klen)
             LVec = np.squeeze(LMat[it,:])
-            mat[0,range(0,4*NG,4),it] =   np.multiply(KVal.real,LVec)
-            mat[0,range(1,4*NG,4),it] = - np.multiply(KVal.imag,LVec)
-            mat[0,range(2,4*NG,4),it] = - np.multiply(KVal.real,LVec)
-            mat[0,range(3,4*NG,4),it] =   np.multiply(KVal.imag,LVec)
+            mat[0,range(0,4*NG,4),2*it  ] =   np.multiply(KVal.real,LVec)
+            mat[0,range(1,4*NG,4),2*it  ] = - np.multiply(KVal.imag,LVec)
+            mat[0,range(2,4*NG,4),2*it  ] = - np.multiply(KVal.real,LVec)
+            mat[0,range(3,4*NG,4),2*it  ] =   np.multiply(KVal.imag,LVec)
+            mat[0,range(0,4*NG,4),2*it+1] = - np.multiply(KVal.imag,LVec)
+            mat[0,range(1,4*NG,4),2*it+1] = - np.multiply(KVal.real,LVec)
+            mat[0,range(2,4*NG,4),2*it+1] =   np.multiply(KVal.imag,LVec)
+            mat[0,range(3,4*NG,4),2*it+1] =   np.multiply(KVal.real,LVec)
 
         self.OutFilterVar = tf.Variable( mat.astype(np.float32),
                 name="Filter_Out" )
