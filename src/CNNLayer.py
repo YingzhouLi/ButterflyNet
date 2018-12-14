@@ -60,8 +60,18 @@ class CNNLayer(tf.keras.layers.Layer):
                     stride=2, padding='VALID')
             Var = tf.nn.relu(tf.nn.bias_add(Var,
                     self.BiasVars[lvl]))
-            tfVars.append(Var)
-
+            tmpVarsk = np.reshape([], (np.size(in_data,0), 0,
+                2**(self.nlvl-lvl)*self.channel_siz))
+            for itx in range(0,2**(self.nlvl-lvl)):
+                tmpVars = np.reshape([], (np.size(in_data,0), 4, 0))
+                for itk in range(0,2**(lvl-2)):
+                    tmpVar = Var[:,itk, (4*itx)*self.channel_siz 
+                            : (4*itx+4)*self.channel_siz ]
+                    tmpVar = tf.reshape(tmpVar,
+                            (np.size(in_data,0),4,self.channel_siz))
+                    tmpVars = tf.concat([tmpVars, tmpVar], axis=2)
+                tmpVarsk = tf.concat([tmpVarsk, tmpVars], axis=1)
+            tfVars.append(tmpVarsk)
 
         # coef_filter of size filter_size*in_channels*out_channels
         OutInterp = tf.nn.conv1d(tfVars[self.nlvl],
@@ -119,15 +129,15 @@ class CNNLayer(tf.keras.layers.Layer):
             varLabel = "LVL_%02d" % (lvl)
             filterVar = tf.Variable(
                     tf.random_normal([2,
-                        2**(lvl-1)*self.channel_siz,
-                        2**lvl*self.channel_siz]),
+                        2**(self.nlvl-lvl+1)*self.channel_siz,
+                        2**(self.nlvl-lvl+2)*self.channel_siz]),
                     name="Filter_"+varLabel )
             biasVar = tf.Variable(tf.zeros([
-                2**lvl*self.channel_siz]),
+                2**(self.nlvl-lvl+2)*self.channel_siz]),
                 name="Bias_"+varLabel )
             self.FilterVars.append(filterVar)
             self.BiasVars.append(biasVar)
 
         self.OutFilterVar = tf.Variable( tf.random_normal(
-            [1, 2**self.nlvl*self.channel_siz, self.out_siz]),
-            name="Filter_Out" )
+                [1, self.channel_siz, self.out_filter_siz]),
+                name="Filter_Out" )
