@@ -14,7 +14,7 @@ from CNNLayer import CNNLayer
 #=========================================================
 # Read data from file
 #---------------------------------------------------------
-data_fname = 'data_DFT_smooth_000100.mat'
+data_fname = 'data_DFT_smooth_001600.mat'
 
 mat = spio.loadmat(data_fname,squeeze_me=False)
 
@@ -48,8 +48,8 @@ print("Y test shape:    (%6d, %6d)" %
 #----- Parameters Setup
 
 #----- Tunable Parameters of BNet
-batch_siz = 10 # Batch size during traning
-channel_siz = 16 # Num of interp pts on each dim
+batch_siz = 100 # Batch size during traning
+channel_siz = 8 # Num of interp pts on each dim
 
 adam_learning_rate = 0.01
 adam_beta1 = 0.9

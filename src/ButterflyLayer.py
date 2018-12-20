@@ -40,10 +40,10 @@ class ButterflyLayer(tf.keras.layers.Layer):
         tmpVars.append(InInterp)
         tfVars.append(list(tmpVars))
 
-        for lvl in range(1,int(self.nlvl/2)+1):
+        for lvl in range(1,self.nlvl//2+1):
             tmpVars = []
             for itk in range(0,2**lvl):
-                Var = tf.nn.conv1d(tfVars[lvl-1][math.floor(itk/2)],
+                Var = tf.nn.conv1d(tfVars[lvl-1][itk//2],
                     self.FilterVars[lvl][itk],
                     stride=2, padding='VALID')
                 Var = tf.nn.relu(tf.nn.bias_add(Var,
@@ -52,7 +52,7 @@ class ButterflyLayer(tf.keras.layers.Layer):
             tfVars.append(list(tmpVars))
 
         # Middle level
-        lvl = int(self.nlvl/2)
+        lvl = self.nlvl//2
         for itk in range(0,2**lvl):
             tmpVars = np.reshape([], (np.size(in_data,0), 0,
                 self.channel_siz))
@@ -82,7 +82,7 @@ class ButterflyLayer(tf.keras.layers.Layer):
             tmptfVars.append(tmpVars)
         tfVars[lvl] = tmptfVars
 
-        for lvl in range(int(self.nlvl/2)+1,self.nlvl):
+        for lvl in range(self.nlvl//2+1,self.nlvl):
             tmpVars = []
             for itx in range(0,2**(self.nlvl-lvl)):
                 if itx % 2 == 0:
@@ -173,7 +173,7 @@ class ButterflyLayer(tf.keras.layers.Layer):
         self.BiasVars = []
         self.FilterVars.append(list([]))
         self.BiasVars.append(list([]))
-        for lvl in range(1,int(self.nlvl/2)+1):
+        for lvl in range(1,self.nlvl//2+1):
             tmpFilterVars = []
             tmpBiasVars = []
             for itk in range(0,2**lvl):
@@ -189,7 +189,7 @@ class ButterflyLayer(tf.keras.layers.Layer):
             self.FilterVars.append(list(tmpFilterVars))
             self.BiasVars.append(list(tmpBiasVars))
 
-        for lvl in range(int(self.nlvl/2)+1,self.nlvl+1):
+        for lvl in range(self.nlvl//2+1,self.nlvl+1):
             for itx in range(0,2**(self.nlvl-lvl)):
                 varLabel = "LVL_%02d_%04d" % (lvl, itx)
                 filterVar = tf.Variable(
@@ -205,7 +205,7 @@ class ButterflyLayer(tf.keras.layers.Layer):
 
         self.MidDenseVars = []
         self.MidBiasVars = []
-        lvl = int(self.nlvl/2)
+        lvl = self.nlvl//2
         for itk in range(0,2**lvl):
             tmpMidDenseVars = []
             tmpMidBiasVars = []

@@ -38,10 +38,10 @@ class CNNLayer(tf.keras.layers.Layer):
 
         # Middle level
         lvl = self.nlvl//2
-        tmpVarsk = np.reshape([], (np.size(in_data,0), 0,
-            2**(self.nlvl-lvl)*self.channel_siz))
+        tmpVarsk = np.reshape([], (np.size(in_data,0), 2**lvl, 0))
         for itk in range(0,2**lvl):
-            tmpVars = np.reshape([], (np.size(in_data,0), 1, 0))
+            tmpVars = np.reshape([], (np.size(in_data,0), 0,
+                self.channel_siz))
             for itx in range(0,2**(self.nlvl-lvl)):
                 tmpVar = tfVars[lvl][:,itx,
                         itk*self.channel_siz : (itk+1)*self.channel_siz ]
@@ -50,11 +50,31 @@ class CNNLayer(tf.keras.layers.Layer):
                     tmpVar, self.MidBiasVars[itk][itx] ) )
                 tmpVar = tf.reshape(tmpVar,
                         (np.size(in_data,0),1,self.channel_siz))
-                tmpVars = tf.concat([tmpVars, tmpVar], axis=2)
-            tmpVarsk = tf.concat([tmpVarsk, tmpVars], axis=1)
+                tmpVars = tf.concat([tmpVars, tmpVar], axis=1)
+            tmpVarsk = tf.concat([tmpVarsk, tmpVars], axis=2)
         tfVars[lvl] = tmpVarsk
 
-        for lvl in range(self.nlvl//2+1,self.nlvl+1):
+        # Reorganize before conv1d
+        lvl = int(self.nlvl/2)
+        tmptfVars = np.reshape([], (np.size(in_data,0), 2**(lvl+1), 0))
+        for itx in range(0,2**(self.nlvl-lvl-1)):
+            tmpVars = np.reshape([], (np.size(in_data,0), 0,
+                self.channel_siz))
+            for itk in range(0,2**lvl):
+                tmpVar = tfVars[lvl][:,2*itx,
+                        itk*self.channel_siz : (itk+1)*self.channel_siz ]
+                tmpVar = tf.reshape(tmpVar,
+                    (np.size(in_data,0),1,self.channel_siz))
+                tmpVars = tf.concat([tmpVars, tmpVar], axis=1)
+                tmpVar = tfVars[lvl][:,2*itx+1,
+                        itk*self.channel_siz : (itk+1)*self.channel_siz ]
+                tmpVar = tf.reshape(tmpVar,
+                    (np.size(in_data,0),1,self.channel_siz))
+                tmpVars = tf.concat([tmpVars, tmpVar], axis=1)
+            tmptfVars = tf.concat([tmptfVars, tmpVars], axis=2)
+        tfVars[lvl] = tmptfVars
+
+        for lvl in range(self.nlvl//2+1,self.nlvl):
             Var = tf.nn.conv1d(tfVars[lvl-1],
                     self.FilterVars[lvl],
                     stride=2, padding='VALID')
@@ -62,9 +82,9 @@ class CNNLayer(tf.keras.layers.Layer):
                     self.BiasVars[lvl]))
             tmpVarsk = np.reshape([], (np.size(in_data,0), 0,
                 2**(self.nlvl-lvl)*self.channel_siz))
-            for itx in range(0,2**(self.nlvl-lvl)):
+            for itx in range(0,2**(self.nlvl-lvl-1)):
                 tmpVars = np.reshape([], (np.size(in_data,0), 4, 0))
-                for itk in range(0,2**(lvl-2)):
+                for itk in range(0,2**(lvl-1)):
                     tmpVar = Var[:,itk, (4*itx)*self.channel_siz 
                             : (4*itx+4)*self.channel_siz ]
                     tmpVar = tf.reshape(tmpVar,
@@ -72,6 +92,21 @@ class CNNLayer(tf.keras.layers.Layer):
                     tmpVars = tf.concat([tmpVars, tmpVar], axis=2)
                 tmpVarsk = tf.concat([tmpVarsk, tmpVars], axis=1)
             tfVars.append(tmpVarsk)
+
+        lvl = self.nlvl
+        Var = tf.nn.conv1d(tfVars[lvl-1],
+            self.FilterVars[lvl],
+            stride=2, padding='VALID')
+        Var = tf.nn.relu(tf.nn.bias_add(Var,
+            self.BiasVars[lvl]))
+
+        Vars = np.reshape([], (np.size(in_data,0), 0,
+            self.channel_siz))
+        for itk in range(0,2**(lvl-1)):
+            tmpVar = tf.reshape(Var[:,itk,:],
+                (np.size(in_data,0),2,self.channel_siz))
+            Vars = tf.concat([Vars, tmpVar], axis=1)
+        tfVars.append(Vars)
 
         # coef_filter of size filter_size*in_channels*out_channels
         OutInterp = tf.nn.conv1d(tfVars[self.nlvl],
@@ -106,6 +141,19 @@ class CNNLayer(tf.keras.layers.Layer):
             self.FilterVars.append(filterVar)
             self.BiasVars.append(biasVar)
 
+        for lvl in range(self.nlvl//2+1,self.nlvl+1):
+            varLabel = "LVL_%02d" % (lvl)
+            filterVar = tf.Variable(
+                    tf.random_normal([2,
+                        2**(self.nlvl-lvl)*self.channel_siz,
+                        2**(self.nlvl-lvl+1)*self.channel_siz]),
+                    name="Filter_"+varLabel )
+            biasVar = tf.Variable(tf.zeros([
+                2**(self.nlvl-lvl+1)*self.channel_siz]),
+                name="Bias_"+varLabel )
+            self.FilterVars.append(filterVar)
+            self.BiasVars.append(biasVar)
+
         self.MidDenseVars = []
         self.MidBiasVars = []
         lvl = self.nlvl//2
@@ -125,18 +173,6 @@ class CNNLayer(tf.keras.layers.Layer):
             self.MidDenseVars.append(list(tmpMidDenseVars))
             self.MidBiasVars.append(list(tmpMidBiasVars))
 
-        for lvl in range(self.nlvl//2+1,self.nlvl+1):
-            varLabel = "LVL_%02d" % (lvl)
-            filterVar = tf.Variable(
-                    tf.random_normal([2,
-                        2**(self.nlvl-lvl+1)*self.channel_siz,
-                        2**(self.nlvl-lvl+2)*self.channel_siz]),
-                    name="Filter_"+varLabel )
-            biasVar = tf.Variable(tf.zeros([
-                2**(self.nlvl-lvl+2)*self.channel_siz]),
-                name="Bias_"+varLabel )
-            self.FilterVars.append(filterVar)
-            self.BiasVars.append(biasVar)
 
         self.OutFilterVar = tf.Variable( tf.random_normal(
                 [1, self.channel_siz, self.out_filter_siz]),
