@@ -16,8 +16,6 @@ from ButterflyLayer import ButterflyLayer
 #---------------------------------------------------------
 data_fname = sys.argv[1]
 
-print(data_fname)
-
 mat = spio.loadmat(data_fname,squeeze_me=False)
 
 n_train = int(mat['n_train'])
@@ -59,7 +57,7 @@ adam_learning_rate = 0.01
 adam_beta1 = 0.9
 adam_beta2 = 0.999
 
-max_iter = n_train//batch_siz*200 # Maximum num of iterations
+max_iter = 500000 # Maximum num of iterations
 report_freq = 10 # Frequency of reporting
 
 #----- Self-adjusted Parameters of BNet

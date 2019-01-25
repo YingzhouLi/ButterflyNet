@@ -149,7 +149,7 @@ for it in range(max_iter):
         hist_loss_train.append(temp_train_loss)
         hist_loss_test.append(temp_test_loss)
         hist_loss_gen_test.append(temp_gen_test_loss)
-        print("Iter # %6d: Train Loss: %10e; Test Loss: %10e; Gen Test Loss:"
+        print("Iter # %6d: Train Loss: %10e; Test Loss: %10e; Gen Test Loss: %10e."
                 % (it+1,
                 temp_train_loss, temp_test_loss, temp_gen_test_loss))
         sys.stdout.flush()
