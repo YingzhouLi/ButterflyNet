@@ -2,16 +2,25 @@ N = 2^6;
 n_train = 25600;
 n_test = 100;
 
-smooth = 1;
+smooth = 0;
+lfreq = 1;
 seqdata = 1;
 
 xx = ((0:N-1)/N)';
-kk = (0:(N/8-1))';
+if lfreq
+    kk = (0:(N/8-1))';
+else
+    kk = (7*N/8:N-1)';
+end
 
 in_siz = length(xx);
 in_range = [0,1];
 out_siz = length(kk)*2;
-out_range = [0, N/8];
+if lfreq
+    out_range = [0, N/8];
+else
+    out_range = [7*N/8, N];
+end
 
 DFT = funFT(kk,xx);
 
@@ -39,9 +48,17 @@ y_train = comp2real(y_train);
 y_test = comp2real(y_test);
 
 if ~smooth
-    fname = 'data_DFT.mat';
+    if lfreq
+        fname = 'data_DFT.mat';
+    else
+        fname = 'data_DFT_hfreq.mat';
+    end
 else
-    fname = 'data_DFT_smooth.mat';
+    if lfreq
+        fname = 'data_DFT_smooth.mat';
+    else
+        fname = 'data_DFT_smooth_hfreq.mat';
+    end
 end
 save(fname, 'n_train', 'n_test', 'in_siz', 'in_range', ...
     'out_siz', 'out_range', ...
@@ -54,9 +71,17 @@ if seqdata
     initsiz = 100;
     while initsiz <= tot_n_train
         if ~smooth
-            fname = ['data_DFT_' sprintf('%06d',initsiz) '.mat'];
+            if lfreq
+                fname = ['data_DFT_' sprintf('%06d',initsiz) '.mat'];
+            else
+                fname = ['data_DFT_hfreq_' sprintf('%06d',initsiz) '.mat'];
+            end
         else
-            fname = ['data_DFT_smooth_' sprintf('%06d',initsiz) '.mat'];
+            if lfreq
+                fname = ['data_DFT_smooth_' sprintf('%06d',initsiz) '.mat'];
+            else
+                fname = ['data_DFT_smooth_hfreq_' sprintf('%06d',initsiz) '.mat'];
+            end
         end
         n_train = initsiz;
         x_train = tot_x_train(1:n_train,:);
@@ -71,6 +96,7 @@ end
 function [x_data,y_data] = rand_real_smooth(DFT,n,kk)
 lenk = length(kk);
 y_data = zeros(n,lenk);
+zeroidx = [];
 for itk = 1:lenk
     if kk(itk) == 0
         zeroidx = itk;
