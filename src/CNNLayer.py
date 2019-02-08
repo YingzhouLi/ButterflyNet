@@ -7,7 +7,7 @@ class CNNLayer(tf.keras.layers.Layer):
     # Initialize parameters in the layer
     def __init__(self, in_siz, out_siz,
             in_filter_siz = -1, out_filter_siz = -1,
-            channel_siz = 8, nlvl = -1):
+            channel_siz = 8, nlvl = -1, prefixed = True):
         super(CNNLayer, self).__init__()
         self.in_siz         = in_siz
         self.out_siz        = out_siz
@@ -15,7 +15,10 @@ class CNNLayer(tf.keras.layers.Layer):
         self.out_filter_siz = out_filter_siz
         self.channel_siz    = channel_siz
         self.nlvl           = nlvl
-        self.buildRand()
+        if prefixed:
+            self.buildButterflyCNN()
+        else:
+            self.buildRand()
 
 
     #==================================================================
@@ -176,4 +179,101 @@ class CNNLayer(tf.keras.layers.Layer):
 
         self.OutFilterVar = tf.Variable( tf.random_normal(
                 [1, self.channel_siz, self.out_filter_siz]),
+                name="Filter_Out" )
+
+    #==================================================================
+    # Initialize variables with coeffs in BF in the layer
+    def buildButterflyCNN(self):
+        NG = int(self.channel_siz/4)
+
+        #----------------
+        # Setup initial interpolation weights
+        mat = np.load('tftmp/Filter_In.npy')
+        self.InFilterVar = tf.Variable( mat.astype(np.float32),
+                name="Filter_In" )
+        mat = np.load('tftmp/Bias_In.npy')
+        self.InBiasVar = tf.Variable( mat.astype(np.float32),
+                name="Bias_In" )
+
+        #----------------
+        # Setup right factor interpolation weights
+        self.FilterVars = []
+        self.BiasVars = []
+        self.FilterVars.append([])
+        self.BiasVars.append([])
+        for lvl in range(1,self.nlvl//2+1):
+            bigmatf = np.zeros((2, 2**(lvl-1)*self.channel_siz,
+                    2**lvl*self.channel_siz))
+            bigmatb = np.zeros((2**lvl*self.channel_siz))
+            for itk in range(0,2**lvl):
+                varLabel = "LVL_%02d_%04d" % (lvl, itk)
+                offset1 = itk//2*self.channel_siz
+                offset2 = itk*self.channel_siz
+                siz = self.channel_siz
+                mat = np.load('tftmp/Filter_'+varLabel+'.npy')
+                bigmatf[:, offset1:offset1+siz,
+                        offset2:offset2+siz] = mat
+                mat = np.load('tftmp/Bias_'+varLabel+'.npy')
+                bigmatb[offset2:offset2+siz] = mat
+            varLabel = "LVL_%02d" % (lvl)
+            filterVar = tf.Variable( bigmatf.astype(np.float32),
+                    name="Filter_"+varLabel )
+            biasVar = tf.Variable( bigmatb.astype(np.float32),
+                    name="Bias_"+varLabel )
+            self.FilterVars.append(filterVar)
+            self.BiasVars.append(biasVar)
+
+        #----------------
+        # Setup weights for middle layer
+        self.MidDenseVars = []
+        self.MidBiasVars = []
+        lvl = self.nlvl//2
+        for itk in range(0,2**lvl):
+            tmpMidDenseVars = []
+            tmpMidBiasVars = []
+            for itx in range(0,2**(self.nlvl-lvl)):
+                varLabel = "LVL_Mid_%04d_%04d" % (itk,itx)
+                mat = np.load('tftmp/Dense_'+varLabel+'.npy')
+                denseVar = tf.Variable( mat.astype(np.float32),
+                        name="Dense_"+varLabel )
+                mat = np.load('tftmp/Bias_'+varLabel+'.npy')
+                biasVar = tf.Variable( mat.astype(np.float32),
+                        name="Bias_"+varLabel )
+                tmpMidDenseVars.append(denseVar)
+                tmpMidBiasVars.append(biasVar)
+            self.MidDenseVars.append(list(tmpMidDenseVars))
+            self.MidBiasVars.append(list(tmpMidBiasVars))
+
+        #----------------
+        # Setup left factor interpolation weights
+        for lvl in range(int(self.nlvl/2)+1,self.nlvl+1):
+            bigmatf = np.zeros((2, 2**(self.nlvl-lvl)*self.channel_siz,
+                    2**(self.nlvl-lvl+1)*self.channel_siz))
+            bigmatb = np.zeros((2**(self.nlvl-lvl+1)*self.channel_siz))
+            for itx in range(0,2**(self.nlvl-lvl+1)):
+                varLabel = "LVL_%02d_%04d" % (lvl, itx)
+                offset1 = itx//2*self.channel_siz
+                offset2 = itx*self.channel_siz
+                siz = self.channel_siz
+                mat = np.load('tftmp/Filter_'+varLabel+'.npy')
+                bigmatf[:, offset1:offset1+siz,
+                        offset2:offset2+siz] = mat
+                mat = np.load('tftmp/Bias_'+varLabel+'.npy')
+                bigmatb[offset2:offset2+siz] = mat
+                filterVar = tf.Variable( bigmatf.astype(np.float32),
+                        name="Filter_"+varLabel )
+                biasVar = tf.Variable( bigmatb.astype(np.float32),
+                        name="Bias_"+varLabel )
+            varLabel = "LVL_%02d" % (lvl)
+            filterVar = tf.Variable( bigmatf.astype(np.float32),
+                    name="Filter_"+varLabel )
+            biasVar = tf.Variable( bigmatb.astype(np.float32),
+                    name="Bias_"+varLabel )
+            self.FilterVars.append(filterVar)
+            self.BiasVars.append(biasVar)
+
+        #----------------
+        # Setup final interpolation weights
+        mat = np.load('tftmp/Filter_Out.npy')
+        self.OutFilterVar = tf.Variable( mat.astype(np.float32),
                 name="Filter_Out" )

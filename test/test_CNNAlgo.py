@@ -7,7 +7,7 @@ import numpy as np
 import scipy.io as spio
 import tensorflow as tf
 
-from ButterflyLayer import ButterflyLayer
+from CNNLayer import CNNLayer
 
 
 #=========================================================
@@ -67,11 +67,10 @@ trainOutData = tf.placeholder(tf.float32, shape=(n_train,out_siz,1),
 
 #=========================================================
 #----- Training Preparation
-butterfly_net = ButterflyLayer(in_siz, out_siz,
+cnn_net = CNNLayer(in_siz, out_siz,
         in_filter_siz, out_filter_siz,
-        channel_siz, nlvl, prefixed,
-        in_range, out_range)
-y_train_output = butterfly_net(tf.convert_to_tensor(x_train))
+        channel_siz, nlvl, prefixed)
+y_train_output = cnn_net(tf.convert_to_tensor(x_train))
 
 loss_train = tf.reduce_mean(
         tf.squared_difference(y_train, y_train_output))
@@ -88,9 +87,5 @@ sess.run(init)
 train_dict = {trainInData: x_train, trainOutData: y_train}
 train_loss = sess.run(loss_train,feed_dict=train_dict)
 print("Train Loss: %10e." % (train_loss))
-
-for n in tf.global_variables():
-    np.save('tftmp/'+n.name.split(':')[0], n.eval(session=sess))
-    print(n.name.split(':')[0] + ' saved')
 
 sess.close()
