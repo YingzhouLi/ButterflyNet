@@ -14,7 +14,7 @@ from ButterflyLayer import ButterflyLayer
 #=========================================================
 # Read data from file
 #---------------------------------------------------------
-data_fname = 'data_DFT_smooth.mat'
+data_fname = 'data_DFT_smooth_025600.mat'
 
 mat = spio.loadmat(data_fname,squeeze_me=False)
 
@@ -50,8 +50,8 @@ print("Y test shape:    (%6d, %6d)" %
 prefixed = True
 
 #----- Tunable Parameters of BNet
-batch_siz = 10 # Batch size during traning
-channel_siz = 16 # Num of interp pts on each dim
+batch_siz = 100 # Batch size during traning
+channel_siz = 8 # Num of interp pts on each dim
 
 adam_learning_rate = 0.01
 adam_beta1 = 0.9
@@ -137,3 +137,10 @@ for it in range(max_iter):
                 temp_train_loss, temp_test_loss))
         sys.stdout.flush()
     sess.run(train_step, feed_dict=train_dict)
+
+for n in tf.global_variables():
+    if n.name.split(':')[0].find('Adam') < 0:
+        np.save('tftmp/'+n.name.split(':')[0], n.eval(session=sess))
+        print(n.name.split(':')[0] + ' saved')
+
+sess.close()

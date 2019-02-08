@@ -14,7 +14,7 @@ from CNNLayer import CNNLayer
 #=========================================================
 # Read data from file
 #---------------------------------------------------------
-data_fname = 'data_DFT_smooth_001600.mat'
+data_fname = 'data_DFT_smooth_025600.mat'
 
 mat = spio.loadmat(data_fname,squeeze_me=False)
 
@@ -47,6 +47,8 @@ print("Y test shape:    (%6d, %6d)" %
 #=========================================================
 #----- Parameters Setup
 
+prefixed = True
+
 #----- Tunable Parameters of BNet
 batch_siz = 100 # Batch size during traning
 channel_siz = 8 # Num of interp pts on each dim
@@ -56,7 +58,7 @@ adam_beta1 = 0.9
 adam_beta2 = 0.999
 
 max_iter = 500000 # Maximum num of iterations
-report_freq = 10 # Frequency of reporting
+report_freq = 1 # Frequency of reporting
 
 #----- Self-adjusted Parameters of BNet
 # Num of levels of the BF struct, must be a even num
@@ -93,7 +95,7 @@ testOutData = tf.placeholder(tf.float32, shape=(n_test,out_siz,1),
 #----- Training Preparation
 cnn_net = CNNLayer(in_siz, out_siz,
         in_filter_siz, out_filter_siz,
-        channel_siz, nlvl )
+        channel_siz, nlvl, prefixed )
 y_train_output = cnn_net(tf.convert_to_tensor(x_train))
 y_test_output = cnn_net(tf.convert_to_tensor(x_test))
 
@@ -133,3 +135,5 @@ for it in range(max_iter):
                 temp_train_loss, temp_test_loss))
         sys.stdout.flush()
     sess.run(train_step, feed_dict=train_dict)
+
+sess.close()
