@@ -112,11 +112,14 @@ butterfly_net = ButterflyLayer(in_siz, out_siz,
         in_range, out_range)
 y_train_output = butterfly_net(tf.convert_to_tensor(x_train))
 y_test_output = butterfly_net(tf.convert_to_tensor(x_test))
+gen_y_test_output = butterfly_net(tf.convert_to_tensor(gen_x_test))
 
 loss_train = tf.reduce_mean(
         tf.squared_difference(y_train, y_train_output))
 loss_test = tf.reduce_mean(
         tf.squared_difference(y_test, y_test_output))
+loss_gen_test = tf.reduce_mean(
+        tf.squared_difference(gen_y_test, gen_y_test_output))
 
 optimizer_adam = tf.train.AdamOptimizer(adam_learning_rate,
         adam_beta1, adam_beta2)
@@ -144,8 +147,8 @@ for it in range(max_iter):
         temp_train_loss = sess.run(loss_train,feed_dict=train_dict)
         test_dict = {testInData: x_test, testOutData: y_test}
         temp_test_loss = sess.run(loss_test,feed_dict=test_dict)
-        test_dict = {testInData: gen_x_test, testOutData: gen_y_test}
-        temp_gen_test_loss = sess.run(loss_test,feed_dict=test_dict)
+        test_gen_dict = {testInData: gen_x_test, testOutData: gen_y_test}
+        temp_gen_test_loss = sess.run(loss_gen_test,feed_dict=test_gen_dict)
         hist_loss_train.append(temp_train_loss)
         hist_loss_test.append(temp_test_loss)
         hist_loss_gen_test.append(temp_gen_test_loss)
