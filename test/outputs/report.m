@@ -1,4 +1,4 @@
-filename = 'DFT_20190208_smooth_Gen_Bathch1000_Channel8_Samp025600';
+filename = 'DFT_20190218_possmooth_Gen_smooth_Bathch1000_Channel8_Samp025600';
 fid = fopen([filename '.out'],'r');
 %data = textscan(fid, 'Iter # %d: Train Loss: %f; Test Loss: %f.', 'Headerlines', 18);
 data = textscan(fid, 'Iter # %d: Train Loss: %f; Test Loss: %f; Gen Test Loss: %f.', 'Headerlines', 20);
@@ -8,7 +8,7 @@ title(regexprep(filename, '_', ' '))
 hold on
 semilogy(data{1},data{3});
 semilogy(data{1},data{4});
-ylim([1e-4 10]);
+ylim([1e-5 10]);
 fclose(fid);
 
 %saveas(gcf, filename, 'jpg');

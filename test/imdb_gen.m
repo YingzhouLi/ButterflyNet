@@ -3,8 +3,8 @@ n_train = 25600;
 n_test = 100;
 
 smoothlvl = 0; % 0 non smooth, 1 pos non smooth 2 smooth, 3 pos smooth
-lfreq = 0;
-seqdata = 1;
+lfreq = 1;
+seqdata = 0;
 
 xx = ((0:N-1)/N)';
 if lfreq
