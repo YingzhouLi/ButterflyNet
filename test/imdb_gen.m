@@ -2,7 +2,7 @@ N = 2^6;
 n_train = 25600;
 n_test = 100;
 
-smoothlvl = 0; % 0 non smooth, 1 pos non smooth 2 smooth, 3 pos smooth
+smoothlvl = 2; % 0 non smooth, 1 pos non smooth 2 smooth, 3 pos smooth
 lfreq = 1;
 seqdata = 0;
 
@@ -10,7 +10,7 @@ xx = ((0:N-1)/N)';
 if lfreq
     kk = (0:(N/8-1))';
 else
-    kk = (7*N/8:N-1)';
+    kk = (3*N/8:N/2-1)';
 end
 
 in_siz = length(xx);
@@ -19,7 +19,7 @@ out_siz = length(kk)*2;
 if lfreq
     out_range = [0, N/8];
 else
-    out_range = [7*N/8, N];
+    out_range = [3*N/8, N/2];
 end
 
 DFT = funFT(kk,xx);
@@ -81,9 +81,9 @@ else
         fname = 'data_DFT_hfreq.mat';
     end
 end
-save(['data/' fname], 'n_train', 'n_test', 'in_siz', 'in_range', ...
-    'out_siz', 'out_range', ...
-    'x_train', 'y_train', 'x_test', 'y_test', '-v7');
+% save(['data/' fname], 'n_train', 'n_test', 'in_siz', 'in_range', ...
+%     'out_siz', 'out_range', ...
+%     'x_train', 'y_train', 'x_test', 'y_test', '-v7');
 
 if seqdata
     tot_n_train = n_train;
