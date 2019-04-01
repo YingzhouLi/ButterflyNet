@@ -1,8 +1,8 @@
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 import sys
-sys.path.insert(0,"../src")
-sys.path.insert(0,"../src/data_gen")
+sys.path.insert(0,"../../src")
+sys.path.insert(0,"../../src/data_gen")
 from pathlib import Path
 import math
 import numpy as np
@@ -11,20 +11,20 @@ import tensorflow as tf
 from matplotlib import pyplot as plt
 
 from gaussianfun import gaussianfun
-from gen_dft_data import gen_uni_data
+from gen_dft_data import gen_gaussian_data
 from ButterflyLayer import ButterflyLayer
 
 N = 64
-Ntest = 10000
+Ntest = 100000
 in_siz = N # Length of input vector
 out_siz = N//8*2 # Length of output vector
 in_range = np.float32([0,1])
 out_range = np.float32([0,out_siz//2])
 freqidx = range(out_siz//2)
-# freqmag = np.fft.ifftshift(gaussianfun(np.arange(-N//2,N//2),[0],[4]))
-stepfun = np.zeros(N)
-stepfun[N//2-4:N//2+4] = 1/8
-freqmag = np.fft.ifftshift(stepfun)
+freqmag = np.fft.ifftshift(gaussianfun(np.arange(-N//2,N//2),[0,0],[2,2]))
+#stepfun = np.zeros(N)
+#stepfun[N//2-4:N//2+4] = 1/8
+#freqmag = np.fft.ifftshift(stepfun)
 
 #=========================================================
 #----- Parameters Setup
@@ -39,7 +39,7 @@ adam_learning_rate = 0.01
 adam_beta1 = 0.9
 adam_beta2 = 0.999
 
-max_iter = 10000 # Maximum num of iterations
+max_iter = 100000 # Maximum num of iterations
 report_freq = 10 # Frequency of reporting
 
 #----- Self-adjusted Parameters of BNet
@@ -105,7 +105,7 @@ print("Total Num Paras:  %6d" % ( np.sum( [np.prod(v.get_shape().as_list())
 sess.run(init)
 
 for it in range(max_iter):
-    rand_x,rand_y = gen_uni_data(freqmag,freqidx,batch_siz)
+    rand_x,rand_y = gen_gaussian_data(freqmag,freqidx,batch_siz)
     train_dict = {trainInData: rand_x, trainOutData: rand_y}
     if it % report_freq == 0:
         temp_train_loss = sess.run(loss_train,feed_dict=train_dict)
@@ -114,53 +114,30 @@ for it in range(max_iter):
     sess.run(train_step, feed_dict=train_dict)
 
 # ========= Testing ============
-x_train_data_file = Path("./tftmp/x_train_data.npy")
-y_train_data_file = Path("./tftmp/y_train_data.npy")
-if x_train_data_file.exists() & y_train_data_file.exists():
-    x_train_data = np.load(x_train_data_file)
-    y_train_data = np.load(y_train_data_file)
-else:
-    x_train_data,y_train_data = gen_uni_data(freqmag,freqidx,Ntest)
-    np.save(x_train_data_file,x_train_data)
-    np.save(y_train_data_file,y_train_data)
-
-train_ys = []
-for it in range(Ntest):
-    rand_x = x_train_data[it,:,:].reshape((1,-1,1))
-    rand_y = y_train_data[it,:,:].reshape((1,-1,1))
-    train_dict = {testInData: rand_x, testOutData: rand_y}
-    temp_train_loss = sess.run(loss_test,feed_dict=train_dict)
-    temp_train_y = sess.run(y_test_output, feed_dict=train_dict)
-    train_ys.append(temp_train_y)
-    print("Iter # %6d: Train Loss: %10e." % (it+1,temp_train_loss))
-    sys.stdout.flush()
-
-np.save("./tftmp/train_BNet_P1_ys_true.npy",y_train_data)
-np.save("./tftmp/train_BNet_P1_ys.npy",train_ys)
-
-x_test_data_file = Path("./tftmp/x_test_data.npy")
-y_test_data_file = Path("./tftmp/y_test_data.npy")
-if x_test_data_file.exists() & y_test_data_file.exists():
-    x_test_data = np.load(x_test_data_file)
-    y_test_data = np.load(y_test_data_file)
-else:
-    x_test_data,y_test_data = gen_uni_data(freqmag,freqidx,Ntest)
-    np.save(x_test_data_file,x_test_data)
-    np.save(y_test_data_file,y_test_data)
-
-
-test_ys = []
-for it in range(Ntest):
-    rand_x = x_test_data[it,:,:].reshape((1,-1,1))
-    rand_y = y_test_data[it,:,:].reshape((1,-1,1))
-    test_dict = {testInData: rand_x, testOutData: rand_y}
-    temp_test_loss = sess.run(loss_test,feed_dict=test_dict)
-    temp_test_y = sess.run(y_test_output, feed_dict=test_dict)
-    test_ys.append(temp_test_y)
-    print("Iter # %6d: Test Loss: %10e." % (it+1,temp_test_loss))
-    sys.stdout.flush()
-
-np.save("./tftmp/test_BNet_P1_ys_true.npy",y_test_data)
-np.save("./tftmp/test_BNet_P1_ys.npy",test_ys)
+for alpha in np.arange(0,5.01,0.2):
+    x_test_data_file = Path("./tftmp/x_test_data_"+str(round(alpha,2))+".npy")
+    y_test_data_file = Path("./tftmp/y_test_data_"+str(round(alpha,2))+".npy")
+    if x_test_data_file.exists() & y_test_data_file.exists():
+        x_test_data = np.load(x_test_data_file)
+        y_test_data = np.load(y_test_data_file)
+    else:
+        freqmag = np.fft.ifftshift(gaussianfun(np.arange(-N//2,N//2),
+            [-alpha,alpha],[2,2]))
+        x_test_data,y_test_data = gen_gaussian_data(freqmag,freqidx,Ntest)
+        np.save(x_test_data_file,x_test_data)
+        np.save(y_test_data_file,y_test_data)
+    
+    test_ys = []
+    for it in range(Ntest):
+        rand_x = x_test_data[it,:,:].reshape((1,-1,1))
+        rand_y = y_test_data[it,:,:].reshape((1,-1,1))
+        test_dict = {testInData: rand_x, testOutData: rand_y}
+        temp_test_loss = sess.run(loss_test,feed_dict=test_dict)
+        temp_test_y = sess.run(y_test_output, feed_dict=test_dict)
+        test_ys.append(temp_test_y)
+        print("Iter # %6d: Test Loss: %10e." % (it+1,temp_test_loss))
+        sys.stdout.flush()
+    
+    np.save("./tftmp/test_CNNNet_Alpha_"+str(round(alpha,2))+".npy",test_ys)
 
 sess.close()

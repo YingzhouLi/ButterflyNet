@@ -10,7 +10,7 @@ import tensorflow as tf
 from matplotlib import pyplot as plt
 
 from gaussianfun import gaussianfun
-from gen_dft_data import gen_dft_data
+from gen_dft_data import gen_uni_data
 from ButterflyLayer import ButterflyLayer
 
 N = 64
@@ -95,7 +95,7 @@ sess.run(init)
 
 hist_loss_train = []
 for it in range(max_iter):
-    rand_x,rand_y = gen_dft_data(freqmag,freqidx,batch_siz)
+    rand_x,rand_y = gen_uni_data(freqmag,freqidx,batch_siz)
     train_dict = {trainInData: rand_x, trainOutData: rand_y}
     if it % report_freq == 0:
         temp_train_loss = sess.run(loss_train,feed_dict=train_dict)

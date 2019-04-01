@@ -11,22 +11,25 @@ import tensorflow as tf
 from matplotlib import pyplot as plt
 
 from gaussianfun import gaussianfun
-from gen_dft_data import gen_dft_data
+from gen_dft_data import gen_uni_data
 from ButterflyLayer import ButterflyLayer
 
 N = 64
-Ntest = 100000
+Ntest = 10000
 in_siz = N # Length of input vector
 out_siz = N//8*2 # Length of output vector
 in_range = np.float32([0,1])
 out_range = np.float32([0,out_siz//2])
 freqidx = range(out_siz//2)
-freqmag = np.fft.ifftshift(gaussianfun(np.arange(-N//2,N//2),[-5,0,5],[2,2,2]))
+# freqmag = np.fft.ifftshift(gaussianfun(np.arange(-N//2,N//2),[-5,0,5],[2,2,2]))
+stepfun = np.zeros(N)
+stepfun[N//2-8:N//2+8] = 1/8
+freqmag = np.fft.ifftshift(stepfun)
 
 #=========================================================
 #----- Parameters Setup
 
-prefixed = False
+prefixed = True
 
 #----- Tunable Parameters of BNet
 channel_siz = 8 # Num of interp pts on each dim
@@ -80,7 +83,7 @@ if x_test_data_file.exists() & y_test_data_file.exists():
     x_test_data = np.load(x_test_data_file)
     y_test_data = np.load(y_test_data_file)
 else:
-    x_test_data,y_test_data = gen_dft_data(freqmag,freqidx,Ntest)
+    x_test_data,y_test_data = gen_uni_data(freqmag,freqidx,Ntest)
     np.save(x_test_data_file,x_test_data)
     np.save(y_test_data_file,y_test_data)
 

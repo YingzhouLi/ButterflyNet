@@ -11,7 +11,7 @@ import tensorflow as tf
 from matplotlib import pyplot as plt
 
 from gaussianfun import gaussianfun
-from gen_dft_data import gen_dft_data
+from gen_dft_data import gen_uni_data
 from ButterflyLayer import ButterflyLayer
 
 N = 64
@@ -104,7 +104,7 @@ print("Total Num Paras:  %6d" % ( np.sum( [np.prod(v.get_shape().as_list())
 sess.run(init)
 
 for it in range(max_iter):
-    rand_x,rand_y = gen_dft_data(freqmag,freqidx,batch_siz)
+    rand_x,rand_y = gen_uni_data(freqmag,freqidx,batch_siz)
     train_dict = {trainInData: rand_x, trainOutData: rand_y}
     if it % report_freq == 0:
         temp_train_loss = sess.run(loss_train,feed_dict=train_dict)
@@ -118,7 +118,7 @@ if x_test_data_file.exists() & y_test_data_file.exists():
     x_test_data = np.load(x_test_data_file)
     y_test_data = np.load(y_test_data_file)
 else:
-    x_test_data,y_test_data = gen_dft_data(freqmag,freqidx,Ntest)
+    x_test_data,y_test_data = gen_uni_data(freqmag,freqidx,Ntest)
     np.save(x_test_data_file,x_test_data)
     np.save(y_test_data_file,y_test_data)
 

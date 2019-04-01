@@ -12,7 +12,7 @@ from matplotlib import pyplot as plt
 
 from gaussianfun import gaussianfun
 from gen_dft_data import gen_uni_data
-from ButterflyLayer import ButterflyLayer
+from CNNLayer import CNNLayer
 
 N = 64
 Ntest = 10000
@@ -21,10 +21,10 @@ out_siz = N//8*2 # Length of output vector
 in_range = np.float32([0,1])
 out_range = np.float32([0,out_siz//2])
 freqidx = range(out_siz//2)
-# freqmag = np.fft.ifftshift(gaussianfun(np.arange(-N//2,N//2),[0],[4]))
-stepfun = np.zeros(N)
-stepfun[N//2-4:N//2+4] = 1/8
-freqmag = np.fft.ifftshift(stepfun)
+freqmag = np.fft.ifftshift(gaussianfun(np.arange(-N//2,N//2),[0],[4]))
+#stepfun = np.zeros(N)
+#stepfun[N//2-4:N//2+4] = 1/8
+#freqmag = np.fft.ifftshift(stepfun)
 
 #=========================================================
 #----- Parameters Setup
@@ -76,21 +76,18 @@ testOutData = tf.placeholder(tf.float32, shape=(1,out_siz,1),
 
 #=========================================================
 #----- Training Preparation
-butterfly_net = ButterflyLayer(in_siz, out_siz,
+cnn_net = CNNLayer(in_siz, out_siz,
         in_filter_siz, out_filter_siz,
-        channel_siz, nlvl, prefixed,
-        in_range, out_range)
+        channel_siz, nlvl, prefixed)
 
 optimizer_adam = tf.train.AdamOptimizer(adam_learning_rate,
         adam_beta1, adam_beta2)
 
-y_output = butterfly_net(trainInData)
-loss_train = tf.reduce_mean(tf.squared_difference(trainOutData,
-    y_output))
+y_output = cnn_net(trainInData)
+loss_train = tf.reduce_mean(tf.squared_difference(trainOutData, y_output))
 
-y_test_output = butterfly_net(testInData)
-loss_test = tf.reduce_mean(tf.squared_difference(testOutData,
-    y_test_output))
+y_test_output = cnn_net(testInData)
+loss_test = tf.reduce_mean(tf.squared_difference(testOutData, y_test_output))
 
 train_step = optimizer_adam.minimize(loss_train)
 
@@ -135,8 +132,8 @@ for it in range(Ntest):
     print("Iter # %6d: Train Loss: %10e." % (it+1,temp_train_loss))
     sys.stdout.flush()
 
-np.save("./tftmp/train_BNet_P1_ys_true.npy",y_train_data)
-np.save("./tftmp/train_BNet_P1_ys.npy",train_ys)
+np.save("./tftmp/train_CNNNet_P1_ys_true.npy",y_train_data)
+np.save("./tftmp/train_CNNNet_P1_ys.npy",train_ys)
 
 x_test_data_file = Path("./tftmp/x_test_data.npy")
 y_test_data_file = Path("./tftmp/y_test_data.npy")
@@ -160,7 +157,7 @@ for it in range(Ntest):
     print("Iter # %6d: Test Loss: %10e." % (it+1,temp_test_loss))
     sys.stdout.flush()
 
-np.save("./tftmp/test_BNet_P1_ys_true.npy",y_test_data)
-np.save("./tftmp/test_BNet_P1_ys.npy",test_ys)
+np.save("./tftmp/test_CNNNet_P1_ys_true.npy",y_test_data)
+np.save("./tftmp/test_CNNNet_P1_ys.npy",test_ys)
 
 sess.close()
