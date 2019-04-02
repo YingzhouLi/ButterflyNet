@@ -111,9 +111,9 @@ for it in range(max_iter):
     sess.run(train_step, feed_dict=train_dict)
 
 # ========= Testing ============
-for alpha in np.arange(0,4,0.2):
-    x_test_data_file = Path("./tftmp/x_test_data_"+str(alpha)+".npy")
-    y_test_data_file = Path("./tftmp/y_test_data_"+str(alpha)+".npy")
+for alpha in np.arange(0,5.01,0.2):
+    x_test_data_file = Path("./tftmp/x_test_data_"+str(round(alpha,2))+".npy")
+    y_test_data_file = Path("./tftmp/y_test_data_"+str(round(alpha,2))+".npy")
     if x_test_data_file.exists() & y_test_data_file.exists():
         x_test_data = np.load(x_test_data_file)
         y_test_data = np.load(y_test_data_file)
@@ -135,6 +135,6 @@ for alpha in np.arange(0,4,0.2):
         print("Iter # %6d: Test Loss: %10e." % (it+1,temp_test_loss))
         sys.stdout.flush()
     
-    np.save("./tftmp/test_CNNNet_Alpha_"+str(alpha)+".npy",test_ys)
+    np.save("./tftmp/test_CNNNet_Alpha_"+str(round(alpha,2))+".npy",test_ys)
 
 sess.close()

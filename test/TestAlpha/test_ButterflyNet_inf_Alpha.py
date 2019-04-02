@@ -138,6 +138,6 @@ for alpha in np.arange(0,5.01,0.2):
         print("Iter # %6d: Test Loss: %10e." % (it+1,temp_test_loss))
         sys.stdout.flush()
     
-    np.save("./tftmp/test_CNNNet_Alpha_"+str(round(alpha,2))+".npy",test_ys)
+    np.save("./tftmp/test_BNet_Alpha_"+str(round(alpha,2))+".npy",test_ys)
 
 sess.close()
