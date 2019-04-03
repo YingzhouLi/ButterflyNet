@@ -12,16 +12,19 @@ import tensorflow as tf
 from gen_dft_data import gen_uni_data
 from ButterflyLayer import ButterflyLayer
 
-N = 64
-Ntrain = 100
+
+N = 1024
+Ntrain = 1
 in_siz = N # Length of input vector
-out_siz = N//8*2 # Length of output vector
+out_siz = N//2*2 # Length of output vector
 in_range = np.float32([0,1])
 out_range = np.float32([0,out_siz//2])
-freqidx = range(out_siz//2)
+freqidx = range(0,out_siz//2)
 stepfun = np.zeros(N)
-stepfun[N//2-8:N//2+8] = 1/8
-freqmag = np.fft.ifftshift(stepfun)
+stepfun[N//2-7:N//2+8] = 1/8
+print(stepfun)
+freqmag = np.fft.fftshift(stepfun)
+print(freqmag)
 
 x_train,y_train = gen_uni_data(freqmag,freqidx,Ntrain)
 
@@ -31,7 +34,7 @@ x_train,y_train = gen_uni_data(freqmag,freqidx,Ntrain)
 prefixed = True
 
 #----- Tunable Parameters of BNet
-channel_siz = 8 # Num of interp pts on each dim
+channel_siz = 40 # Num of interp pts on each dim
 
 #----- Self-adjusted Parameters of BNet
 # Num of levels of the BF struct, must be a even num
@@ -78,6 +81,9 @@ print("Total Num Paras:  %6d" % ( np.sum( [np.prod(v.get_shape().as_list())
 #----- Step by Step Training
 sess.run(init)
 train_dict = {trainInData: x_train, trainOutData: y_train}
+print(x_train)
+print("===")
+print(y_train)
 train_loss = sess.run(loss_train,feed_dict=train_dict)
 print("Train Loss: %10e." % (train_loss))
 

@@ -83,17 +83,18 @@ class CNNLayer(tf.keras.layers.Layer):
                     stride=2, padding='VALID')
             Var = tf.nn.relu(tf.nn.bias_add(Var,
                     self.BiasVars[lvl]))
-            tmpVarsk = np.reshape([], (np.size(in_data,0), 0,
-                2**(self.nlvl-lvl)*self.channel_siz))
+            tmpVarsk = np.reshape([], (np.size(in_data,0),
+                4*2**(lvl-1),0))
             for itx in range(0,2**(self.nlvl-lvl-1)):
-                tmpVars = np.reshape([], (np.size(in_data,0), 4, 0))
+                tmpVars = np.reshape([], (np.size(in_data,0), 0,
+                    self.channel_siz))
                 for itk in range(0,2**(lvl-1)):
                     tmpVar = Var[:,itk, (4*itx)*self.channel_siz 
                             : (4*itx+4)*self.channel_siz ]
                     tmpVar = tf.reshape(tmpVar,
                             (np.size(in_data,0),4,self.channel_siz))
-                    tmpVars = tf.concat([tmpVars, tmpVar], axis=2)
-                tmpVarsk = tf.concat([tmpVarsk, tmpVars], axis=1)
+                    tmpVars = tf.concat([tmpVars, tmpVar], axis=1)
+                tmpVarsk = tf.concat([tmpVarsk, tmpVars], axis=2)
             tfVars.append(tmpVarsk)
 
         lvl = self.nlvl

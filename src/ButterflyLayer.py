@@ -37,6 +37,8 @@ class ButterflyLayer(tf.keras.layers.Layer):
 
         tfVars = []
         tmpVars = []
+        InInterp = tf.Print(InInterp,[InInterp],message = "InInterp: ",
+                summarize=1000000)
         tmpVars.append(InInterp)
         tfVars.append(list(tmpVars))
 
@@ -48,15 +50,19 @@ class ButterflyLayer(tf.keras.layers.Layer):
                     stride=2, padding='VALID')
                 Var = tf.nn.relu(tf.nn.bias_add(Var,
                     self.BiasVars[lvl][itk]))
+                Var = tf.Print(Var,[Var],message =
+                        "Lvl"+str(lvl)+"itk"+str(itk)+": ",
+                summarize=1000000)
                 tmpVars.append(Var)
             tfVars.append(list(tmpVars))
 
         # Middle level
         lvl = self.nlvl//2
-        for itk in range(0,2**lvl):
+        tmptfVars = []
+        for itx in range(0,2**(self.nlvl-lvl)):
             tmpVars = np.reshape([], (np.size(in_data,0), 0,
                 self.channel_siz))
-            for itx in range(0,2**(self.nlvl-lvl)):
+            for itk in range(0,2**lvl):
                 tmpVar = tfVars[lvl][itk][:,itx,:]
                 tmpVar = tf.matmul(tmpVar,self.MidDenseVars[itk][itx])
                 tmpVar = tf.nn.relu( tf.nn.bias_add(
@@ -64,96 +70,54 @@ class ButterflyLayer(tf.keras.layers.Layer):
                 tmpVar = tf.reshape(tmpVar,
                         (np.size(in_data,0),1,self.channel_siz))
                 tmpVars = tf.concat([tmpVars, tmpVar], axis=1)
-            tfVars[lvl][itk] = tmpVars
-
-        # Reorganize before conv1d
-        lvl = int(self.nlvl/2)
-        tmptfVars = []
-        for itx in range(0,2**(self.nlvl-lvl-1)):
-            tmpVars = np.reshape([], (np.size(in_data,0), 0,
-                self.channel_siz))
-            for itk in range(0,2**lvl):
-                tmpVar = tf.reshape(tfVars[lvl][itk][:,2*itx,:],
-                    (np.size(in_data,0),1,self.channel_siz))
-                tmpVars = tf.concat([tmpVars, tmpVar], axis=1)
-                tmpVar = tf.reshape(tfVars[lvl][itk][:,2*itx+1,:],
-                    (np.size(in_data,0),1,self.channel_siz))
-                tmpVars = tf.concat([tmpVars, tmpVar], axis=1)
+            tmpVars = tf.Print(tmpVars,[tmpVars],message =
+                "itx"+str(itx)+"itk"+str(itk)+": ",
+                summarize=1000000)
             tmptfVars.append(tmpVars)
         tfVars[lvl] = tmptfVars
 
-        for lvl in range(self.nlvl//2+1,self.nlvl):
-            tmpVars = []
+        for lvl in range(self.nlvl//2+1,self.nlvl+1):
+            tmptfVars = []
             for itx in range(0,2**(self.nlvl-lvl)):
-                if itx % 2 == 0:
-                    Var01 = tf.nn.conv1d(tfVars[lvl-1][itx],
-                        self.FilterVars[lvl][2*itx],
-                        stride=2, padding='VALID')
-                    Var01 = tf.nn.relu(tf.nn.bias_add(Var01,
-                        self.BiasVars[lvl][2*itx]))
-                    Var02 = tf.nn.conv1d(tfVars[lvl-1][itx],
-                        self.FilterVars[lvl][2*itx+1],
-                        stride=2, padding='VALID')
-                    Var02 = tf.nn.relu(tf.nn.bias_add(Var02,
-                        self.BiasVars[lvl][2*itx+1]))
-                else:
-                    Var11 = tf.nn.conv1d(tfVars[lvl-1][itx],
-                        self.FilterVars[lvl][2*itx],
-                        stride=2, padding='VALID')
-                    Var11 = tf.nn.relu(tf.nn.bias_add(Var11,
-                        self.BiasVars[lvl][2*itx]))
-                    Var12 = tf.nn.conv1d(tfVars[lvl-1][itx],
-                        self.FilterVars[lvl][2*itx+1],
-                        stride=2, padding='VALID')
-                    Var12 = tf.nn.relu(tf.nn.bias_add(Var12,
-                        self.BiasVars[lvl][2*itx+1]))
-
-                    Vars = np.reshape([], (np.size(in_data,0), 0,
-                        self.channel_siz))
-                    for itk in range(0,2**(lvl-1)):
-                        Var = tf.reshape(Var01[:,itk,:],
-                            (np.size(in_data,0),1,self.channel_siz))
-                        Vars = tf.concat([Vars, Var], axis=1)
-                        Var = tf.reshape(Var11[:,itk,:],
-                            (np.size(in_data,0),1,self.channel_siz))
-                        Vars = tf.concat([Vars, Var], axis=1)
-                        Var = tf.reshape(Var02[:,itk,:],
-                            (np.size(in_data,0),1,self.channel_siz))
-                        Vars = tf.concat([Vars, Var], axis=1)
-                        Var = tf.reshape(Var12[:,itk,:],
-                            (np.size(in_data,0),1,self.channel_siz))
-                        Vars = tf.concat([Vars, Var], axis=1)
-                    tmpVars.append(Vars)
-            tfVars.append(list(tmpVars))
-
-        lvl = self.nlvl
-        tmpVars = []
-        Var1 = tf.nn.conv1d(tfVars[lvl-1][0],
-            self.FilterVars[lvl][0],
-            stride=2, padding='VALID')
-        Var1 = tf.nn.relu(tf.nn.bias_add(Var1,
-            self.BiasVars[lvl][0]))
-        Var2 = tf.nn.conv1d(tfVars[lvl-1][0],
-            self.FilterVars[lvl][1],
-            stride=2, padding='VALID')
-        Var2 = tf.nn.relu(tf.nn.bias_add(Var2,
-            self.BiasVars[lvl][1]))
-
-        Vars = np.reshape([], (np.size(in_data,0), 0,
-            self.channel_siz))
-        for itk in range(0,2**(lvl-1)):
-            Var = tf.reshape(Var1[:,itk,:],
-                (np.size(in_data,0),1,self.channel_siz))
-            Vars = tf.concat([Vars, Var], axis=1)
-            Var = tf.reshape(Var2[:,itk,:],
-                (np.size(in_data,0),1,self.channel_siz))
-            Vars = tf.concat([Vars, Var], axis=1)
-        tmpVars.append(Vars)
-        tfVars.append(list(tmpVars))
+                tmpVars = np.reshape([], (np.size(in_data,0), 0,
+                    self.channel_siz))
+                for itk in range(0,2**(lvl-1)):
+                    tmpVar = tf.reshape(tfVars[lvl-1][2*itx][:,itk,:],
+                        (np.size(in_data,0),1,self.channel_siz))
+                    tmpVars = tf.concat([tmpVars, tmpVar], axis=1)
+                    tmpVar = tf.reshape(tfVars[lvl-1][2*itx+1][:,itk,:],
+                        (np.size(in_data,0),1,self.channel_siz))
+                    tmpVars = tf.concat([tmpVars, tmpVar], axis=1)
+                Var1 = tf.nn.conv1d(tmpVars,
+                    self.FilterVars[lvl][2*itx],
+                    stride=2, padding='VALID')
+                Var1 = tf.nn.relu(tf.nn.bias_add(Var1,
+                    self.BiasVars[lvl][2*itx]))
+                Var2 = tf.nn.conv1d(tmpVars,
+                    self.FilterVars[lvl][2*itx+1],
+                    stride=2, padding='VALID')
+                Var2 = tf.nn.relu(tf.nn.bias_add(Var2,
+                    self.BiasVars[lvl][2*itx+1]))
+                tmpVars = np.reshape([], (np.size(in_data,0), 0,
+                    self.channel_siz))
+                for itk in range(0,2**(lvl-1)):
+                    Var = tf.reshape(Var1[:,itk,:],
+                        (np.size(in_data,0),1,self.channel_siz))
+                    tmpVars = tf.concat([tmpVars, Var], axis=1)
+                    Var = tf.reshape(Var2[:,itk,:],
+                        (np.size(in_data,0),1,self.channel_siz))
+                    tmpVars = tf.concat([tmpVars, Var], axis=1)
+                tmpVars = tf.Print(tmpVars,[tmpVars],message =
+                        "Lvl"+str(lvl)+"itx"+str(itx)+": ",
+                        summarize=1000000)
+                tmptfVars.append(tmpVars)
+            tfVars.append(list(tmptfVars))
 
         # coef_filter of size filter_size*in_channels*out_channels
         OutInterp = tf.nn.conv1d(tfVars[self.nlvl][0],
             self.OutFilterVar, stride=1, padding='VALID')
+        OutInterp = tf.Print(OutInterp,[OutInterp],message = "OutInterp: ",
+                summarize=1000000)
 
         out_data = tf.reshape(OutInterp,shape=(np.size(in_data,0),
             self.out_siz,1))
@@ -382,7 +346,7 @@ class ButterflyLayer(tf.keras.layers.Layer):
         LMat1 = LagrangeMat(ChebNodes,k1Nodes)
         LMat2 = LagrangeMat(ChebNodes,k2Nodes)
 
-        for lvl in range(int(self.nlvl/2)+1,self.nlvl+1):
+        for lvl in range(self.nlvl//2+1,self.nlvl+1):
             tmpFilterVars = []
             tmpBiasVars = []
             for itx in range(0,2**(self.nlvl-lvl+1)):
@@ -395,13 +359,13 @@ class ButterflyLayer(tf.keras.layers.Layer):
                     LMat = LMat2
                     kNodes = k2Nodes
                 klen = (self.out_range[1] - \
-                        self.out_range[0])/2**lvl
+                        self.out_range[0])/2**(lvl-1)
 
                 for it in range(0,NG):
-                    trueitx = int(itx/2)*2
+                    trueitx = itx//2*2
                     xcen = (self.in_range[1] \
                         - self.in_range[0]) \
-                        / 2**(self.nlvl-lvl)*(trueitx+0.5) \
+                        / 2**(self.nlvl-lvl+1)*(trueitx+0.5) \
                         + self.in_range[0]
                     KVal = np.exp( -2*math.pi*1j * xcen *
                             (kNodes[it]-ChebNodes) * klen)
@@ -424,10 +388,10 @@ class ButterflyLayer(tf.keras.layers.Layer):
                             - np.multiply(KVal.real,LVec)
                     mat[0,:,(4*it+2,4*it+3)] = - mat[0,:,(4*it,4*it+1)]
 
-                    trueitx = int(itx/2)*2+1
+                    trueitx = itx//2*2+1
                     xcen = (self.in_range[1] \
                         - self.in_range[0]) \
-                        / 2**(self.nlvl-lvl)*(trueitx+0.5) \
+                        / 2**(self.nlvl-lvl+1)*(trueitx+0.5) \
                         + self.in_range[0]
                     KVal = np.exp( -2*math.pi*1j * xcen *
                             (kNodes[it]-ChebNodes) * klen)
@@ -473,10 +437,10 @@ class ButterflyLayer(tf.keras.layers.Layer):
             mat[0,range(1,4*NG,4),2*it  ] = - np.multiply(KVal.imag,LVec)
             mat[0,range(2,4*NG,4),2*it  ] = - np.multiply(KVal.real,LVec)
             mat[0,range(3,4*NG,4),2*it  ] =   np.multiply(KVal.imag,LVec)
-            mat[0,range(0,4*NG,4),2*it+1] = - np.multiply(KVal.imag,LVec)
-            mat[0,range(1,4*NG,4),2*it+1] = - np.multiply(KVal.real,LVec)
-            mat[0,range(2,4*NG,4),2*it+1] =   np.multiply(KVal.imag,LVec)
-            mat[0,range(3,4*NG,4),2*it+1] =   np.multiply(KVal.real,LVec)
+            mat[0,range(0,4*NG,4),2*it+1] =   np.multiply(KVal.imag,LVec)
+            mat[0,range(1,4*NG,4),2*it+1] =   np.multiply(KVal.real,LVec)
+            mat[0,range(2,4*NG,4),2*it+1] = - np.multiply(KVal.imag,LVec)
+            mat[0,range(3,4*NG,4),2*it+1] = - np.multiply(KVal.real,LVec)
 
         self.OutFilterVar = tf.Variable( mat.astype(np.float32),
                 name="Filter_Out" )

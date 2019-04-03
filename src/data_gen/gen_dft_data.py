@@ -1,6 +1,8 @@
 import numpy as np
 def gen_uni_data(freqmag,freqidx,siz):
     N = len(freqmag)
+
+    np.random.seed(417)
     freqmag = np.tile(np.reshape(freqmag,[1,N]),(siz,1))
     consty = np.random.uniform(-np.sqrt(30),np.sqrt(30),[siz,1])
     zeroy = np.zeros([siz,1])
@@ -18,7 +20,7 @@ def gen_uni_data(freqmag,freqidx,siz):
     realy = realy*freqmag
     imagy = imagy*freqmag
     y = realy + imagy*1j
-    xdata = np.reshape(np.fft.fft(y,N,1).real/N,(siz,N,1),order='F')
+    xdata = np.reshape(np.fft.ifft(y,N,1).real,(siz,N,1),order='F')
     realy = np.reshape(realy[:,freqidx],(siz,1,-1),order='F')
     imagy = np.reshape(imagy[:,freqidx],(siz,1,-1),order='F')
     ydata = np.reshape(np.concatenate((realy,imagy),axis=1),(siz,-1,1),order='F')
@@ -45,7 +47,7 @@ def gen_gaussian_data(freqmag,freqidx,siz):
     realy = realy*freqmag
     imagy = imagy*freqmag
     y = realy + imagy*1j
-    xdata = np.reshape(np.fft.fft(y,N,1).real/N,(siz,N,1),order='F')
+    xdata = np.reshape(np.fft.ifft(y,N,1).real,(siz,N,1),order='F')
     realy = np.reshape(realy[:,freqidx],(siz,1,-1),order='F')
     imagy = np.reshape(imagy[:,freqidx],(siz,1,-1),order='F')
     ydata = np.reshape(np.concatenate((realy,imagy),axis=1),(siz,-1,1),order='F')
