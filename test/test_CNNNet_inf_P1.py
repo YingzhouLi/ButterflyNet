@@ -22,9 +22,7 @@ in_range = np.float32([0,1])
 out_range = np.float32([0,out_siz//2])
 freqidx = range(out_siz//2)
 freqmag = np.fft.ifftshift(gaussianfun(np.arange(-N//2,N//2),[0],[4]))
-#stepfun = np.zeros(N)
-#stepfun[N//2-4:N//2+4] = 1/8
-#freqmag = np.fft.ifftshift(stepfun)
+freqmag[N//2] = 0
 
 #=========================================================
 #----- Parameters Setup

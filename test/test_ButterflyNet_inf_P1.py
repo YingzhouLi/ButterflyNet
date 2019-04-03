@@ -21,9 +21,8 @@ out_siz = N//8*2 # Length of output vector
 in_range = np.float32([0,1])
 out_range = np.float32([0,out_siz//2])
 freqidx = range(out_siz//2)
-# freqmag = np.fft.ifftshift(gaussianfun(np.arange(-N//2,N//2),[0],[4]))
 stepfun = np.zeros(N)
-stepfun[N//2-4:N//2+4] = 1/8
+stepfun[N//2-3:N//2+4] = 1/8
 freqmag = np.fft.ifftshift(stepfun)
 
 #=========================================================
