@@ -37,8 +37,6 @@ class ButterflyLayer(tf.keras.layers.Layer):
 
         tfVars = []
         tmpVars = []
-        InInterp = tf.Print(InInterp,[InInterp],message = "InInterp: ",
-                summarize=1000000)
         tmpVars.append(InInterp)
         tfVars.append(list(tmpVars))
 
@@ -50,9 +48,6 @@ class ButterflyLayer(tf.keras.layers.Layer):
                     stride=2, padding='VALID')
                 Var = tf.nn.relu(tf.nn.bias_add(Var,
                     self.BiasVars[lvl][itk]))
-                Var = tf.Print(Var,[Var],message =
-                        "Lvl"+str(lvl)+"itk"+str(itk)+": ",
-                summarize=1000000)
                 tmpVars.append(Var)
             tfVars.append(list(tmpVars))
 
@@ -70,9 +65,6 @@ class ButterflyLayer(tf.keras.layers.Layer):
                 tmpVar = tf.reshape(tmpVar,
                         (np.size(in_data,0),1,self.channel_siz))
                 tmpVars = tf.concat([tmpVars, tmpVar], axis=1)
-            tmpVars = tf.Print(tmpVars,[tmpVars],message =
-                "itx"+str(itx)+"itk"+str(itk)+": ",
-                summarize=1000000)
             tmptfVars.append(tmpVars)
         tfVars[lvl] = tmptfVars
 
@@ -107,17 +99,12 @@ class ButterflyLayer(tf.keras.layers.Layer):
                     Var = tf.reshape(Var2[:,itk,:],
                         (np.size(in_data,0),1,self.channel_siz))
                     tmpVars = tf.concat([tmpVars, Var], axis=1)
-                tmpVars = tf.Print(tmpVars,[tmpVars],message =
-                        "Lvl"+str(lvl)+"itx"+str(itx)+": ",
-                        summarize=1000000)
                 tmptfVars.append(tmpVars)
             tfVars.append(list(tmptfVars))
 
         # coef_filter of size filter_size*in_channels*out_channels
         OutInterp = tf.nn.conv1d(tfVars[self.nlvl][0],
             self.OutFilterVar, stride=1, padding='VALID')
-        OutInterp = tf.Print(OutInterp,[OutInterp],message = "OutInterp: ",
-                summarize=1000000)
 
         out_data = tf.reshape(OutInterp,shape=(np.size(in_data,0),
             self.out_siz,1))
