@@ -2,7 +2,6 @@ import numpy as np
 def gen_uni_data(freqmag,freqidx,siz):
     N = len(freqmag)
 
-    np.random.seed(417)
     freqmag = np.tile(np.reshape(freqmag,[1,N]),(siz,1))
     consty = np.random.uniform(-np.sqrt(30),np.sqrt(30),[siz,1])
     zeroy = np.zeros([siz,1])
