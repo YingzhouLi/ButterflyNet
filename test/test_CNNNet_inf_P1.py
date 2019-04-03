@@ -14,7 +14,7 @@ from gaussianfun import gaussianfun
 from gen_dft_data import gen_uni_data
 from CNNLayer import CNNLayer
 
-N = 64
+N = 1024
 Ntest = 10000
 in_siz = N # Length of input vector
 out_siz = N//8*2 # Length of output vector

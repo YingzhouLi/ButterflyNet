@@ -42,10 +42,10 @@ class CNNLayer(tf.keras.layers.Layer):
         # Middle level
         lvl = self.nlvl//2
         tmpVarsk = np.reshape([], (np.size(in_data,0), 2**lvl, 0))
-        for itk in range(0,2**lvl):
+        for itx in range(0,2**(self.nlvl-lvl)):
             tmpVars = np.reshape([], (np.size(in_data,0), 0,
                 self.channel_siz))
-            for itx in range(0,2**(self.nlvl-lvl)):
+            for itk in range(0,2**lvl):
                 tmpVar = tfVars[lvl][:,itx,
                         itk*self.channel_siz : (itk+1)*self.channel_siz ]
                 tmpVar = tf.matmul(tmpVar,self.MidDenseVars[itk][itx])
@@ -57,60 +57,36 @@ class CNNLayer(tf.keras.layers.Layer):
             tmpVarsk = tf.concat([tmpVarsk, tmpVars], axis=2)
         tfVars[lvl] = tmpVarsk
 
-        # Reorganize before conv1d
-        lvl = int(self.nlvl/2)
-        tmptfVars = np.reshape([], (np.size(in_data,0), 2**(lvl+1), 0))
-        for itx in range(0,2**(self.nlvl-lvl-1)):
-            tmpVars = np.reshape([], (np.size(in_data,0), 0,
-                self.channel_siz))
-            for itk in range(0,2**lvl):
-                tmpVar = tfVars[lvl][:,2*itx,
-                        itk*self.channel_siz : (itk+1)*self.channel_siz ]
-                tmpVar = tf.reshape(tmpVar,
-                    (np.size(in_data,0),1,self.channel_siz))
-                tmpVars = tf.concat([tmpVars, tmpVar], axis=1)
-                tmpVar = tfVars[lvl][:,2*itx+1,
-                        itk*self.channel_siz : (itk+1)*self.channel_siz ]
-                tmpVar = tf.reshape(tmpVar,
-                    (np.size(in_data,0),1,self.channel_siz))
-                tmpVars = tf.concat([tmpVars, tmpVar], axis=1)
-            tmptfVars = tf.concat([tmptfVars, tmpVars], axis=2)
-        tfVars[lvl] = tmptfVars
-
-        for lvl in range(self.nlvl//2+1,self.nlvl):
-            Var = tf.nn.conv1d(tfVars[lvl-1],
+        for lvl in range(self.nlvl//2+1,self.nlvl+1):
+            tmptfVars = np.reshape([], (np.size(in_data,0), 2**lvl, 0))
+            for itx in range(0,2**(self.nlvl-lvl)):
+                tmpVars = np.reshape([], (np.size(in_data,0), 0,
+                    self.channel_siz))
+                for itk in range(0,2**(lvl-1)):
+                    tmpVar = tfVars[lvl-1][:, itk,
+                        2*itx*self.channel_siz:(2*itx+2)*self.channel_siz ]
+                    tmpVar = tf.reshape(tmpVar,
+                        (np.size(in_data,0),2,self.channel_siz))
+                    tmpVars = tf.concat([tmpVars, tmpVar], axis=1)
+                tmptfVars = tf.concat([tmptfVars, tmpVars], axis=2)
+            Var = tf.nn.conv1d(tmptfVars,
                     self.FilterVars[lvl],
                     stride=2, padding='VALID')
             Var = tf.nn.relu(tf.nn.bias_add(Var,
                     self.BiasVars[lvl]))
             tmpVarsk = np.reshape([], (np.size(in_data,0),
-                4*2**(lvl-1),0))
-            for itx in range(0,2**(self.nlvl-lvl-1)):
+                2**lvl,0))
+            for itx in range(0,2**(self.nlvl-lvl)):
                 tmpVars = np.reshape([], (np.size(in_data,0), 0,
                     self.channel_siz))
                 for itk in range(0,2**(lvl-1)):
-                    tmpVar = Var[:,itk, (4*itx)*self.channel_siz 
-                            : (4*itx+4)*self.channel_siz ]
+                    tmpVar = Var[:, itk, (2*itx)*self.channel_siz 
+                            : (2*itx+2)*self.channel_siz ]
                     tmpVar = tf.reshape(tmpVar,
-                            (np.size(in_data,0),4,self.channel_siz))
+                            (np.size(in_data,0),2,self.channel_siz))
                     tmpVars = tf.concat([tmpVars, tmpVar], axis=1)
                 tmpVarsk = tf.concat([tmpVarsk, tmpVars], axis=2)
             tfVars.append(tmpVarsk)
-
-        lvl = self.nlvl
-        Var = tf.nn.conv1d(tfVars[lvl-1],
-            self.FilterVars[lvl],
-            stride=2, padding='VALID')
-        Var = tf.nn.relu(tf.nn.bias_add(Var,
-            self.BiasVars[lvl]))
-
-        Vars = np.reshape([], (np.size(in_data,0), 0,
-            self.channel_siz))
-        for itk in range(0,2**(lvl-1)):
-            tmpVar = tf.reshape(Var[:,itk,:],
-                (np.size(in_data,0),2,self.channel_siz))
-            Vars = tf.concat([Vars, tmpVar], axis=1)
-        tfVars.append(Vars)
 
         # coef_filter of size filter_size*in_channels*out_channels
         OutInterp = tf.nn.conv1d(tfVars[self.nlvl],
