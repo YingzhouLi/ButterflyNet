@@ -12,7 +12,7 @@ import tensorflow as tf
 from gen_dft_data import gen_gaussian_data
 from ButterflyLayer import ButterflyLayer
 
-N = 64
+N = 1024
 Ntrain = 100
 in_siz = N # Length of input vector
 out_siz = N//8*2 # Length of output vector
@@ -31,7 +31,7 @@ x_train,y_train = gen_gaussian_data(freqmag,freqidx,Ntrain)
 prefixed = True
 
 #----- Tunable Parameters of BNet
-channel_siz = 8 # Num of interp pts on each dim
+channel_siz = 16 # Num of interp pts on each dim
 
 #----- Self-adjusted Parameters of BNet
 # Num of levels of the BF struct, must be a even num

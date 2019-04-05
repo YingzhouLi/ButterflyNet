@@ -14,7 +14,7 @@ from gaussianfun import gaussianfun
 from gen_dft_data import gen_gaussian_data
 from CNNLayer import CNNLayer
 
-N = 64
+N = 1024
 Ntest = 100000
 in_siz = N # Length of input vector
 out_siz = N//8*2 # Length of output vector
@@ -31,7 +31,7 @@ prefixed = True
 
 #----- Tunable Parameters of BNet
 batch_siz = 256 # Batch size during traning
-channel_siz = 8 # Num of interp pts on each dim
+channel_siz = 16 # Num of interp pts on each dim
 
 adam_learning_rate = 0.01
 adam_beta1 = 0.9
