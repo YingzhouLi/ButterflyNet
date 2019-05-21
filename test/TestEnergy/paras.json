@@ -1,0 +1,16 @@
+{
+    "inputSize": 1024,
+    "outputSize": 256,
+    "Ntrain": "inf",
+    "Ntest": 100000,
+    "prefixed": true,
+    "batchSize": 256,
+    "channelSize": 8,
+    "maxIter": 20000,
+    "reportFreq": 10,
+    "ADAMparas": {
+        "learningRate": 0.01,
+        "beta1": 0.9,
+        "beta2": 0.999
+    }
+}

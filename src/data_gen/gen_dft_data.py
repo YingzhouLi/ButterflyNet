@@ -53,3 +53,15 @@ def gen_gaussian_data(freqmag,freqidx,siz):
     xdata = np.float32(xdata)
     ydata = np.float32(ydata)
     return xdata,ydata
+
+def gen_energy_data(N,siz):
+    DW = np.fft.fftfreq(N)
+    DW[DW==0] = np.inf
+    DW = 1/DW
+    tmp = np.random.normal(0,1,[siz,N//8])
+    xdata = np.fft.irfft(np.fft.rfft(tmp,axis=1),N,1)
+    ydata = np.sum(np.absolute(np.multiply(
+        np.fft.fft(xdata,axis=1), DW))**2,axis=1)/N**2
+    xdata = np.float32(np.reshape(xdata,[siz,N,1]))
+    ydata = np.float32(np.reshape(ydata,[siz,1,1]))
+    return xdata,ydata
