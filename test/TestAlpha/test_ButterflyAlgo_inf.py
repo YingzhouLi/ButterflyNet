@@ -31,7 +31,7 @@ x_train,y_train = gen_gaussian_data(freqmag,freqidx,Ntrain)
 prefixed = True
 
 #----- Tunable Parameters of BNet
-channel_siz = 16 # Num of interp pts on each dim
+channel_siz = 8 # Num of interp pts on each dim
 
 #----- Self-adjusted Parameters of BNet
 # Num of levels of the BF struct, must be a even num

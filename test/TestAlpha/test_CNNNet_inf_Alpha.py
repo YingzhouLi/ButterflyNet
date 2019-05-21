@@ -31,13 +31,13 @@ prefixed = True
 
 #----- Tunable Parameters of BNet
 batch_siz = 256 # Batch size during traning
-channel_siz = 16 # Num of interp pts on each dim
+channel_siz = 8 # Num of interp pts on each dim
 
-adam_learning_rate = 0.01
+adam_learning_rate = 0.0005
 adam_beta1 = 0.9
 adam_beta2 = 0.999
 
-max_iter = 100000 # Maximum num of iterations
+max_iter = 50000 # Maximum num of iterations
 report_freq = 10 # Frequency of reporting
 
 #----- Self-adjusted Parameters of BNet
