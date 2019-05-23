@@ -18,15 +18,12 @@ json_file = open('paras.json')
 paras = json.load(json_file)
 
 N = paras['inputSize']
-Ntest = paras['Ntrain']
+Ntest = paras['Ntest']
 in_siz = paras['inputSize']
 out_siz = paras['outputSize']
 in_range = np.float32([0,1])
 out_range = np.float32([0,out_siz//2])
-
-freqidx = range(out_siz//2)
-freqmag = np.fft.ifftshift(gaussianfun(np.arange(-N//2,N//2),[0,0],[2,2]))
-freqmag[N//2] = 0
+energy_calc_siz = paras['energyCalcSize']
 
 #=========================================================
 #----- Parameters Setup
@@ -69,11 +66,11 @@ sess = tf.Session()
 
 trainInData = tf.placeholder(tf.float32, shape=(batch_siz,in_siz,1),
         name="trainInData")
-trainOutData = tf.placeholder(tf.float32, shape=(batch_siz,out_siz,1),
+trainOutData = tf.placeholder(tf.float32, shape=(batch_siz,1,1),
         name="trainOutData")
 testInData = tf.placeholder(tf.float32, shape=(1,in_siz,1),
         name="testInData")
-testOutData = tf.placeholder(tf.float32, shape=(1,out_siz,1),
+testOutData = tf.placeholder(tf.float32, shape=(1,1,1),
         name="testOutData")
 
 #=========================================================
@@ -85,21 +82,37 @@ cnn_net = CNNLayer(in_siz, out_siz,
 optimizer_adam = tf.train.AdamOptimizer(adam_learning_rate,
         adam_beta1, adam_beta2)
 
-denseMat1 = tf.Variable(tf.random_normal([out_siz,256]))
-bias1 = tf.Variable(tf.random_normal([256]))
-denseMat2 =  tf.Variable(tf.random_normal([256,1]))
-tmpVar = tf.matmul(tf.reshape(cnn_net(trainInData),[-1,out_siz]),
-        denseMat1)
-tmpVar = tf.nn.relu( tf.nn.bias_add(tmpVar,bias1))
-y_output = tf.reshape(tf.matmul(tmpVar,denseMat2),[-1,1,1])
+if energy_calc_siz == 'sqr':
+    denseVec = tf.Variable(tf.random_normal([out_siz]))
+    tmpVar = tf.multiply(
+            tf.reshape(cnn_net(trainInData),[-1,out_siz]),
+            denseVec)
+    tmpVar = tf.reduce_sum( tf.square( tmpVar ), 1)
+    y_output = tf.reshape(tmpVar,[-1,1,1])
+else:
+    denseMat1 = tf.Variable(tf.random_normal([out_siz,energy_calc_siz]))
+    bias1 = tf.Variable(tf.random_normal([energy_calc_siz]))
+    denseMat2 =  tf.Variable(tf.random_normal([energy_calc_siz,1]))
+    tmpVar = tf.matmul(tf.reshape(cnn_net(trainInData),[-1,out_siz]),
+            denseMat1)
+    tmpVar = tf.nn.relu( tf.nn.bias_add(tmpVar,bias1))
+    y_output = tf.reshape(tf.matmul(tmpVar,denseMat2),[-1,1,1])
 
 loss_train = tf.reduce_mean(tf.squared_difference(trainOutData,
     y_output))
 
-tmpVar = tf.matmul(tf.reshape(cnn_net(trainInData),[-1,out_siz]),
-        denseMat1)
-tmpVar = tf.nn.relu( tf.nn.bias_add(tmpVar,bias1))
-y_test_output = tf.reshape(tf.matmul(tmpVar,denseMat2),[-1,1,1])
+if energy_calc_siz == 'sqr':
+    tmpVar = tf.multiply(
+            tf.reshape(cnn_net(testInData),[-1,out_siz]),
+            denseVec)
+    tmpVar = tf.reduce_sum( tf.square( tmpVar ), 1)
+    y_test_output = tf.reshape(tmpVar,[-1,1,1])
+else:
+    tmpVar = tf.matmul(tf.reshape(cnn_net(testInData),[-1,out_siz]),
+            denseMat1)
+    tmpVar = tf.nn.relu( tf.nn.bias_add(tmpVar,bias1))
+    y_test_output = tf.reshape(tf.matmul(tmpVar,denseMat2),[-1,1,1])
+
 loss_test = tf.reduce_mean(tf.squared_difference(testOutData,
     y_test_output))
 
@@ -146,6 +159,9 @@ for it in range(Ntest):
     print("Iter # %6d: Test Loss: %10e." % (it+1,temp_test_loss))
     sys.stdout.flush()
 
-np.save("./tftmp/test_CNNNet_Energy.npy",test_ys)
+if energy_calc_siz == 'sqr':
+    np.save("./tftmp/test_CNNNet_Energy_sqr.npy",test_ys)
+else:
+    np.save("./tftmp/test_CNNNet_Energy_"+str(energy_calc_siz)+".npy",test_ys)
 
 sess.close()
