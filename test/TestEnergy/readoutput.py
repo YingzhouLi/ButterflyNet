@@ -19,8 +19,8 @@ y_test_data_file = Path("./tftmp/y_test_data.npy")
 x_test_data = np.load(x_test_data_file)
 y_test_data = np.load(y_test_data_file)
 
-ys_bnet = np.load("./tftmp/test_BNet_Energy_sqr.npy")
-ys_cnn  = np.load("./tftmp/test_CNNNet_Energy_sqr.npy")
+ys_bnet = np.load("./tftmp/test_BNet_Energy_128.npy")
+ys_cnn  = np.load("./tftmp/test_CNNNet_Energy_128.npy")
 
 y_test_data = np.squeeze(y_test_data)
 ys_bnet = np.squeeze(ys_bnet)

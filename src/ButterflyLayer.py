@@ -141,7 +141,7 @@ class ButterflyLayer(tf.keras.layers.Layer):
             self.BiasVars.append(list(tmpBiasVars))
 
         for lvl in range(self.nlvl//2+1,self.nlvl+1):
-            for itx in range(0,2**(self.nlvl-lvl)):
+            for itx in range(0,2**(self.nlvl-lvl+1)):
                 varLabel = "LVL_%02d_%04d" % (lvl, itx)
                 filterVar = tf.Variable(
                         tf.random_normal([2,self.channel_siz,

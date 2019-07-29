@@ -24,7 +24,15 @@ for alpha in np.arange(0,5.01,0.2):
     ys_cnn = np.squeeze(ys_cnn)
 
     err_bnet = np.linalg.norm(ys_bnet-y_test_data,axis=1)
+    rel_err_bnet = np.linalg.norm(ys_bnet-y_test_data,axis=1)/np.linalg.norm(y_test_data,axis=1)
     err_cnn = np.linalg.norm(ys_cnn-y_test_data,axis=1)
+    rel_err_cnn = np.linalg.norm(ys_cnn-y_test_data,axis=1)/np.linalg.norm(y_test_data,axis=1)
 
-    print("BNet: %f (%f); CNN: %f (%f)" % ( np.mean(err_bnet),
-            np.std(err_bnet), np.mean(err_cnn), np.std(err_cnn)) )
+#    print("BNet: %f (%f); CNN: %f (%f)" % ( np.mean(err_bnet),
+#            np.std(err_bnet), np.mean(err_cnn), np.std(err_cnn)) )
+
+#    print("MSE BNet: %f (%f); MSE CNN: %f (%f)" % ( np.mean(err_bnet**2),
+#            np.std(err_bnet**2), np.mean(err_cnn**2), np.std(err_cnn**2)) )
+
+    print("Rel BNet: %f (%f); Rel CNN: %f (%f)" % ( np.mean(rel_err_bnet),
+            np.std(rel_err_bnet), np.mean(rel_err_cnn), np.std(rel_err_cnn)) )
