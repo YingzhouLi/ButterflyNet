@@ -11,6 +11,7 @@ import tensorflow as tf
 import json
 
 from gaussianfun import gaussianfun
+from gen_dft_data import gen_energy_data
 from gen_dft_data import gen_gaussian_data
 from ButterflyLayer import ButterflyLayer
 
@@ -18,6 +19,7 @@ json_file = open('paras.json')
 paras = json.load(json_file)
 
 N = paras['inputSize']
+Ntest = paras['Ntest']
 Ntrain = 1
 in_siz = paras['inputSize']
 out_siz = paras['outputSize']
@@ -88,5 +90,15 @@ print("Train Loss: %10e." % (train_loss))
 for n in tf.global_variables():
     np.save('tftmp/'+n.name.split(':')[0], n.eval(session=sess))
     print(n.name.split(':')[0] + ' saved')
+
+x_test_data_file = Path("./tftmp/x_test_data.npy")
+y_test_data_file = Path("./tftmp/y_test_data.npy")
+if x_test_data_file.exists() & y_test_data_file.exists():
+    x_test_data = np.load(x_test_data_file)
+    y_test_data = np.load(y_test_data_file)
+else:
+    x_test_data,y_test_data = gen_energy_data(N,Ntest)
+    np.save(x_test_data_file,x_test_data)
+    np.save(y_test_data_file,y_test_data)
 
 sess.close()

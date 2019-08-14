@@ -1,12 +1,12 @@
 {
-    "inputSize": 1024,
+    "inputSize": 4096,
     "outputSize": 256,
-    "energyCalcSize": "sqr",
+    "energyCalcSize": 128,
     "Ntrain": "inf",
     "Ntest": 100000,
     "prefixed": true,
     "batchSize": 256,
-    "channelSize": 8,
+    "channelSize": 16,
     "maxIter": 100000,
     "reportFreq": 10,
     "ADAMparas": {

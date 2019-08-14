@@ -14,14 +14,14 @@ from gaussianfun import gaussianfun
 from gen_dft_data import gen_gaussian_data
 from CNNLayer import CNNLayer
 
-N = 1024
-Ntest = 100000
+N = 4096
+Ntest = 10000
 in_siz = N # Length of input vector
 out_siz = N//8*2 # Length of output vector
 in_range = np.float32([0,1])
 out_range = np.float32([0,out_siz//2])
 freqidx = range(out_siz//2)
-freqmag = np.fft.ifftshift(gaussianfun(np.arange(-N//2,N//2),[0,0],[2,2]))
+freqmag = np.fft.ifftshift(gaussianfun(np.arange(-N//2,N//2),[0,0],[10,10]))
 freqmag[N//2] = 0
 
 #=========================================================
@@ -31,7 +31,7 @@ prefixed = True
 
 #----- Tunable Parameters of BNet
 batch_siz = 256 # Batch size during traning
-channel_siz = 8 # Num of interp pts on each dim
+channel_siz = 16 # Num of interp pts on each dim
 
 adam_learning_rate = 0.0005
 adam_beta1 = 0.9
@@ -109,15 +109,15 @@ for it in range(max_iter):
     sess.run(train_step, feed_dict=train_dict)
 
 # ========= Testing ============
-for alpha in np.arange(0,5.01,0.2):
-    x_test_data_file = Path("./tftmp/x_test_data_"+str(round(alpha,2))+".npy")
-    y_test_data_file = Path("./tftmp/y_test_data_"+str(round(alpha,2))+".npy")
+for alpha in np.arange(0,20.01,0.8):
+    x_test_data_file = Path("./tftmp/x_test_data_"+str(round(alpha,3))+".npy")
+    y_test_data_file = Path("./tftmp/y_test_data_"+str(round(alpha,3))+".npy")
     if x_test_data_file.exists() & y_test_data_file.exists():
         x_test_data = np.load(x_test_data_file)
         y_test_data = np.load(y_test_data_file)
     else:
         freqmag = np.fft.ifftshift(gaussianfun(np.arange(-N//2,N//2),
-            [-alpha,alpha],[2,2]))
+            [-alpha,alpha],[10,10]))
         freqmag[N//2] = 0
         x_test_data,y_test_data = gen_gaussian_data(freqmag,freqidx,Ntest)
         np.save(x_test_data_file,x_test_data)

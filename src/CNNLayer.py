@@ -237,10 +237,6 @@ class CNNLayer(tf.keras.layers.Layer):
                         offset2:offset2+siz] = mat
                 mat = np.load('tftmp/Bias_'+varLabel+'.npy')
                 bigmatb[offset2:offset2+siz] = mat
-                filterVar = tf.Variable( bigmatf.astype(np.float32),
-                        name="Filter_"+varLabel )
-                biasVar = tf.Variable( bigmatb.astype(np.float32),
-                        name="Bias_"+varLabel )
             varLabel = "LVL_%02d" % (lvl)
             filterVar = tf.Variable( bigmatf.astype(np.float32),
                     name="Filter_"+varLabel )

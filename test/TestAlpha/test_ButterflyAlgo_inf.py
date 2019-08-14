@@ -9,20 +9,20 @@ import numpy as np
 import scipy.io as spio
 import tensorflow as tf
 
+from gaussianfun import gaussianfun
 from gen_dft_data import gen_gaussian_data
 from ButterflyLayer import ButterflyLayer
 
-N = 1024
-Ntrain = 100
+N = 4096
+Ntest = 10000
+Ntrain = 256
 in_siz = N # Length of input vector
 out_siz = N//8*2 # Length of output vector
 in_range = np.float32([0,1])
 out_range = np.float32([0,out_siz//2])
 freqidx = range(out_siz//2)
-stepfun = np.zeros(N)
-stepfun[N//2-8:N//2+8] = 1/8
-freqmag = np.fft.ifftshift(stepfun)
-
+freqmag = np.fft.ifftshift(gaussianfun(np.arange(-N//2,N//2),[0,0],[10,10]))
+freqmag[N//2] = 0
 x_train,y_train = gen_gaussian_data(freqmag,freqidx,Ntrain)
 
 #=========================================================
@@ -31,7 +31,7 @@ x_train,y_train = gen_gaussian_data(freqmag,freqidx,Ntrain)
 prefixed = True
 
 #----- Tunable Parameters of BNet
-channel_siz = 8 # Num of interp pts on each dim
+channel_siz = 16 # Num of interp pts on each dim
 
 #----- Self-adjusted Parameters of BNet
 # Num of levels of the BF struct, must be a even num
@@ -79,10 +79,27 @@ print("Total Num Paras:  %6d" % ( np.sum( [np.prod(v.get_shape().as_list())
 sess.run(init)
 train_dict = {trainInData: x_train, trainOutData: y_train}
 train_loss = sess.run(loss_train,feed_dict=train_dict)
-print("Train Loss: %10e." % (train_loss))
+train_y = sess.run(y_train_output, feed_dict=train_dict)
+rel_err = np.linalg.norm(train_y-y_train,axis=1)/np.linalg.norm(y_train,axis=1)
+print("Train Loss: %10e; Rel Err: %10e." % (train_loss,np.mean(rel_err)))
+print("Y norm: %10e" % (np.mean(np.linalg.norm(y_train, axis=1))))
 
 for n in tf.global_variables():
     np.save('tftmp/'+n.name.split(':')[0], n.eval(session=sess))
     print(n.name.split(':')[0] + ' saved')
+
+for alpha in np.arange(0,20.01,0.8):
+    x_test_data_file = Path("./tftmp/x_test_data_"+str(round(alpha,3))+".npy")
+    y_test_data_file = Path("./tftmp/y_test_data_"+str(round(alpha,3))+".npy")
+    if x_test_data_file.exists() & y_test_data_file.exists():
+        x_test_data = np.load(x_test_data_file)
+        y_test_data = np.load(y_test_data_file)
+    else:
+        freqmag = np.fft.ifftshift(gaussianfun(np.arange(-N//2,N//2),
+            [-alpha,alpha],[10,10]))
+        freqmag[N//2] = 0
+        x_test_data,y_test_data = gen_gaussian_data(freqmag,freqidx,Ntest)
+        np.save(x_test_data_file,x_test_data)
+        np.save(y_test_data_file,y_test_data)
 
 sess.close()
