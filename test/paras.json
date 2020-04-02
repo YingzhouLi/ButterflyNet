@@ -1,0 +1,25 @@
+{
+    "neural network": {
+        "input size": 256,
+        "output size": 32,
+        "channel size": 8,
+        "inout type": "c2c",
+        "num of layers before switch": 3,
+        "num of layers after switch": 4,
+        "prefixed": false,
+        "input range": [0, 1],
+        "output range": [0, 16]
+    },
+    "train and test": {
+        "batch size": 200,
+        "num of test data": 100000,
+        "max num of iteration": 100,
+        "report frequency": 10,
+        "data set type": "dft",
+        "adam": {
+            "learningRate": 0.001,
+            "beta1": 0.9,
+            "beta2": 0.999
+        }
+    }
+}

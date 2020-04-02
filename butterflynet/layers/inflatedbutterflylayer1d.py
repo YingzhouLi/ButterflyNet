@@ -2,13 +2,13 @@ import math
 import numpy as np
 import tensorflow as tf
 
-class CNNLayer(tf.keras.layers.Layer):
+class InflatedButterflyLayer1D(tf.keras.layers.Layer):
     #==================================================================
     # Initialize parameters in the layer
     def __init__(self, in_siz, out_siz,
             in_filter_siz = -1, out_filter_siz = -1,
             channel_siz = 8, nlvl = -1, prefixed = True):
-        super(CNNLayer, self).__init__()
+        super(InflatedButterflyLayer1D, self).__init__()
         self.in_siz         = in_siz
         self.out_siz        = out_siz
         self.in_filter_siz  = in_filter_siz
@@ -24,7 +24,7 @@ class CNNLayer(tf.keras.layers.Layer):
     #==================================================================
     # Forward structure in the layer
     def call(self, in_data):
-        InInterp = tf.nn.conv1d(in_data, self.InFilterVar,
+        InInterp = tf.nn.conv1d(input=in_data, filters=self.InFilterVar,
                 stride=self.in_filter_siz, padding='VALID')
         InInterp = tf.nn.relu(tf.nn.bias_add(InInterp, self.InBiasVar))
 
@@ -32,8 +32,8 @@ class CNNLayer(tf.keras.layers.Layer):
         tfVars.append(InInterp)
 
         for lvl in range(1,self.nlvl//2+1):
-            Var = tf.nn.conv1d(tfVars[lvl-1],
-                    self.FilterVars[lvl],
+            Var = tf.nn.conv1d(input=tfVars[lvl-1],
+                    filters=self.FilterVars[lvl],
                     stride=2, padding='VALID')
             Var = tf.nn.relu(tf.nn.bias_add(Var,
                     self.BiasVars[lvl]))
@@ -69,8 +69,8 @@ class CNNLayer(tf.keras.layers.Layer):
                         (np.size(in_data,0),2,self.channel_siz))
                     tmpVars = tf.concat([tmpVars, tmpVar], axis=1)
                 tmptfVars = tf.concat([tmptfVars, tmpVars], axis=2)
-            Var = tf.nn.conv1d(tmptfVars,
-                    self.FilterVars[lvl],
+            Var = tf.nn.conv1d(input=tmptfVars,
+                    filters=self.FilterVars[lvl],
                     stride=2, padding='VALID')
             Var = tf.nn.relu(tf.nn.bias_add(Var,
                     self.BiasVars[lvl]))
@@ -89,8 +89,8 @@ class CNNLayer(tf.keras.layers.Layer):
             tfVars.append(tmpVarsk)
 
         # coef_filter of size filter_size*in_channels*out_channels
-        OutInterp = tf.nn.conv1d(tfVars[self.nlvl],
-            self.OutFilterVar, stride=1, padding='VALID')
+        OutInterp = tf.nn.conv1d(input=tfVars[self.nlvl],
+            filters=self.OutFilterVar, stride=1, padding='VALID')
 
         out_data = tf.reshape(OutInterp,shape=(np.size(in_data,0),
             self.out_siz,1))
@@ -100,7 +100,7 @@ class CNNLayer(tf.keras.layers.Layer):
     #==================================================================
     # Initialize variables in the layer
     def buildRand(self):
-        self.InFilterVar = tf.Variable( tf.random_normal(
+        self.InFilterVar = tf.Variable( tf.random.normal(
             [self.in_filter_siz, 1, self.channel_siz]),
             name="Filter_In" )
         self.InBiasVar = tf.Variable( tf.zeros([self.channel_siz]),
@@ -113,7 +113,7 @@ class CNNLayer(tf.keras.layers.Layer):
         for lvl in range(1,self.nlvl//2+1):
             varLabel = "LVL_%02d" % (lvl)
             filterVar = tf.Variable(
-                    tf.random_normal([2,2**(lvl-1)*self.channel_siz,
+                    tf.random.normal([2,2**(lvl-1)*self.channel_siz,
                         2**lvl*self.channel_siz]),
                     name="Filter_"+varLabel )
             biasVar = tf.Variable(tf.zeros([2**lvl*self.channel_siz]),
@@ -124,7 +124,7 @@ class CNNLayer(tf.keras.layers.Layer):
         for lvl in range(self.nlvl//2+1,self.nlvl+1):
             varLabel = "LVL_%02d" % (lvl)
             filterVar = tf.Variable(
-                    tf.random_normal([2,
+                    tf.random.normal([2,
                         2**(self.nlvl-lvl)*self.channel_siz,
                         2**(self.nlvl-lvl+1)*self.channel_siz]),
                     name="Filter_"+varLabel )
@@ -143,7 +143,7 @@ class CNNLayer(tf.keras.layers.Layer):
             for itx in range(0,2**(self.nlvl-lvl)):
                 varLabel = "LVL_Mid_%04d_%04d" % (itk,itx)
                 denseVar = tf.Variable(
-                        tf.random_normal([self.channel_siz,
+                        tf.random.normal([self.channel_siz,
                             self.channel_siz]),
                         name="Dense_"+varLabel )
                 biasVar = tf.Variable(tf.zeros([self.channel_siz]),
@@ -154,7 +154,7 @@ class CNNLayer(tf.keras.layers.Layer):
             self.MidBiasVars.append(list(tmpMidBiasVars))
 
 
-        self.OutFilterVar = tf.Variable( tf.random_normal(
+        self.OutFilterVar = tf.Variable( tf.random.normal(
                 [1, self.channel_siz, self.out_filter_siz]),
                 name="Filter_Out" )
 
