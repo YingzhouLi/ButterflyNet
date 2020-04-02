@@ -11,8 +11,8 @@ def gaussianfun(x, mulist, siglist):
     return gx
 
 def LagrangeMat(gs,ts): # gs and ts are vectors
-    gs = np.squeeze(gs)
-    ts = np.squeeze(ts)
+    gs = np.squeeze(gs,0)
+    ts = np.squeeze(ts,0)
     NG = gs.shape[0]
     NT = ts.shape[0]
     mat = np.ones((NT,NG))

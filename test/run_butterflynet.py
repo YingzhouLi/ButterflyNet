@@ -84,7 +84,7 @@ def compute_loss(y,ytrue):
     return tf.reduce_mean(tf.divide(nfrac,dfrac))
 
 def xdistfunc(siz):
-    return np.random.uniform(size=siz)
+    return np.random.uniform(-1,1,size=siz)
 if ds_type.lower() == 'dft':
     if (io_type.lower() == 'r2r') or (io_type.lower() == 'r2c'):
         N = int(in_siz/(x_range[1]-x_range[0]))
@@ -116,7 +116,7 @@ def train(model, optimizer, dataset):
         loss = train_one_step(model, optimizer, x, ytrue)
         if it % report_freq == 0:
             endtim = time.time()
-            print("Iter %6d:  loss %10.6f,  time elapsed %8.2f" \
+            print("Iter %6d:  loss %10e,  time elapsed %8.2f" \
                     % (it, loss.numpy(), endtim-starttim))
 
 train(bnet, optimizer, dataset)

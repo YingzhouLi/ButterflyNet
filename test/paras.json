@@ -1,17 +1,17 @@
 {
     "neural network": {
-        "input size": 256,
-        "output size": 32,
-        "channel size": 8,
-        "inout type": "c2c",
-        "num of layers before switch": 3,
-        "num of layers after switch": 4,
-        "prefixed": false,
-        "input range": [0, 1],
-        "output range": [0, 16]
+        "input size": 32,
+        "output size": 128,
+        "channel size": 16,
+        "inout type": "r2r",
+        "num of layers before switch": 2,
+        "num of layers after switch": 5,
+        "prefixed": true,
+        "input range": [0, 0.25],
+        "output range": [-64, 64]
     },
     "train and test": {
-        "batch size": 200,
+        "batch size": 10,
         "num of test data": 100000,
         "max num of iteration": 100,
         "report frequency": 10,
