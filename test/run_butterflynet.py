@@ -78,6 +78,8 @@ print("")
 bnet = models.ButterflyNet1D(in_siz, out_siz, io_type, c_siz,
         L, Lx, Lk, prefixed, x_range, k_range)
 
+bnet.summary()
+
 def compute_loss(y,ytrue):
     nfrac = tf.reduce_sum(tf.math.squared_difference(y,ytrue),axis=[1])
     dfrac = tf.reduce_sum(tf.square(ytrue), axis=[1])

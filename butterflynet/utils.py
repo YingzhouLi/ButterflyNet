@@ -23,3 +23,22 @@ def LagrangeMat(gs,ts): # gs and ts are vectors
                     mat[itT,itG] = mat[itT,itG] * (ts[itT]-gs[it]) \
                             / (gs[itG]-gs[it])
     return mat
+
+def matassign_c2c(val):
+    m = np.size(val,0)
+    n = np.size(val,1)
+    mat = np.empty((4*m,4*n))
+    for it in range(n):
+        mat[range(0,4*m,4),4*it]   =  val.real[:,it]
+        mat[range(1,4*m,4),4*it]   = -val.imag[:,it]
+        mat[range(2,4*m,4),4*it]   = -val.real[:,it]
+        mat[range(3,4*m,4),4*it]   =  val.imag[:,it]
+
+        mat[range(0,4*m,4),4*it+1] =  val.imag[:,it]
+        mat[range(1,4*m,4),4*it+1] =  val.real[:,it]
+        mat[range(2,4*m,4),4*it+1] = -val.imag[:,it]
+        mat[range(3,4*m,4),4*it+1] = -val.real[:,it]
+
+    mat[:,range(2,4*n,4)] = -mat[:,range(0,4*n,4)]
+    mat[:,range(3,4*n,4)] = -mat[:,range(1,4*n,4)]
+    return mat

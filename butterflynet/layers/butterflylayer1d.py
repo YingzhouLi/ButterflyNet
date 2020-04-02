@@ -3,6 +3,7 @@ import numpy as np
 import tensorflow as tf
 
 from ..utils import LagrangeMat
+from ..utils import matassign_c2c
 
 class ButterflyLayer1D(tf.keras.layers.Layer):
     #==================================================================
@@ -48,13 +49,11 @@ class ButterflyLayer1D(tf.keras.layers.Layer):
         self.Lk4 = totLx - self.Lx
         self.Lk3 = self.Lk - self.Lk4
 
-        print(self.Lx1, self.Lx2, self.Lk3, self.Lk4)
-
         self.x_range       = in_range
         self.k_range       = out_range
 
         if prefixed:
-            self.buildButterfly()
+            self.buildDFT()
         else:
             self.buildRand()
 
@@ -179,6 +178,7 @@ class ButterflyLayer1D(tf.keras.layers.Layer):
 
         return(out_data)
 
+
     #==================================================================
     # Initialize variables in the layer
     def buildRand(self):
@@ -285,7 +285,7 @@ class ButterflyLayer1D(tf.keras.layers.Layer):
 
     #==================================================================
     # Initialize variables with coeffs in BF in the layer
-    def buildButterfly(self):
+    def buildDFT(self):
         NG = self.c_siz//4
         xran = self.x_range[1] - self.x_range[0]
         kran = self.k_range[1] - self.k_range[0]
@@ -301,7 +301,7 @@ class ButterflyLayer1D(tf.keras.layers.Layer):
         kcen = np.mean(self.k_range)
         xlen = xran/2**(self.L-self.Lk3)
         KVal = np.exp(-2*math.pi*1j*kcen*(xNodes.T-ChebNodes)*xlen)
-        tmpmat = self.matassign_c2c(LMat*KVal)
+        tmpmat = matassign_c2c(LMat*KVal)
         if self.itype == "r":
             mat = np.empty((self.x_filter_siz,1,self.c_siz))
             mat[:,0,:] = tmpmat[range(0,4*self.x_filter_siz,4),:]
@@ -336,11 +336,11 @@ class ButterflyLayer1D(tf.keras.layers.Layer):
                 varLabel = "LVL_%02d_%04d" % (lvl, itk)
                 mat = np.empty((2, self.c_siz, self.c_siz))
                 kcen = kran/2**lvl*(itk+0.5) + self.k_range[0]
-                xlen = xran/2**(self.L-lvl)
+                xlen = xran/2**(self.L-lvl-self.Lk3)
                 KVal = np.exp(-2*math.pi*1j*kcen*(x1Nodes.T-ChebNodes)*xlen)
-                mat[0,:,:] = self.matassign_c2c(LMat1*KVal)
+                mat[0,:,:] = matassign_c2c(LMat1*KVal)
                 KVal = np.exp(-2*math.pi*1j*kcen*(x2Nodes.T-ChebNodes)*xlen)
-                mat[1,:,:] = self.matassign_c2c(LMat2*KVal)
+                mat[1,:,:] = matassign_c2c(LMat2*KVal)
                 filterVar = tf.Variable( mat.astype(np.float32),
                         name="Filter_"+varLabel )
                 biasVar = tf.Variable(tf.zeros([self.c_siz]),
@@ -358,11 +358,11 @@ class ButterflyLayer1D(tf.keras.layers.Layer):
                 mat = np.empty((2, self.c_siz, self.c_siz))
                 kcen = kran/2**self.Lx1*(itk+0.5) \
                         + self.k_range[0]
-                xlen = xran/2**(self.L-lvl)
+                xlen = xran/2**(self.L-lvl-self.Lk3)
                 KVal = np.exp(-2*math.pi*1j*kcen*(x1Nodes.T-ChebNodes)*xlen)
-                mat[0,:,:] = self.matassign_c2c(LMat1*KVal)
+                mat[0,:,:] = matassign_c2c(LMat1*KVal)
                 KVal = np.exp(-2*math.pi*1j*kcen*(x2Nodes.T-ChebNodes)*xlen)
-                mat[1,:,:] = self.matassign_c2c(LMat2*KVal)
+                mat[1,:,:] = matassign_c2c(LMat2*KVal)
                 filterVar = tf.Variable( mat.astype(np.float32),
                         name="Filter_"+varLabel )
                 biasVar = tf.Variable(tf.zeros([self.c_siz]),
@@ -389,7 +389,7 @@ class ButterflyLayer1D(tf.keras.layers.Layer):
                 xoff = xlen*itx + self.x_range[0]
                 xNodes = ChebNodes*xlen + xoff
                 KVal = np.exp(-2*math.pi*1j*np.outer(xNodes,kNodes))
-                mat = self.matassign_c2c(KVal)
+                mat = matassign_c2c(KVal)
                 denseVar = tf.Variable( mat.astype(np.float32),
                         name="Dense_"+varLabel )
                 biasVar = tf.Variable(tf.zeros([self.c_siz]),
@@ -422,7 +422,7 @@ class ButterflyLayer1D(tf.keras.layers.Layer):
                 xcen = xran/2**self.Lk4*(itx//2+0.5) \
                         + self.x_range[0]
                 KVal = np.exp(-2*math.pi*1j*xcen*(kNodes-ChebNodes.T)*klen)
-                mat[0,:,:] = self.matassign_c2c(KVal*LMat.T)
+                mat[0,:,:] = matassign_c2c(KVal*LMat.T)
                 filterVar = tf.Variable( mat.astype(np.float32),
                         name="Filter_"+varLabel )
                 biasVar = tf.Variable(tf.zeros([self.c_siz]),
@@ -449,12 +449,12 @@ class ButterflyLayer1D(tf.keras.layers.Layer):
                         * (itx//2*2+0.5) \
                         + self.x_range[0]
                 KVal = np.exp(-2*math.pi*1j*xcen*(kNodes-ChebNodes.T)*klen)
-                mat[0,:,:] = self.matassign_c2c(KVal*LMat.T)
+                mat[0,:,:] = matassign_c2c(KVal*LMat.T)
                 xcen = xran/2**(self.L-lvl+1) \
                         * ((itx//2*2+1)+0.5) \
                         + self.x_range[0]
                 KVal = np.exp(-2*math.pi*1j*xcen*(kNodes-ChebNodes.T)*klen)
-                mat[1,:,:] = self.matassign_c2c(KVal*LMat.T)
+                mat[1,:,:] = matassign_c2c(KVal*LMat.T)
                 filterVar = tf.Variable( mat.astype(np.float32),
                         name="Filter_"+varLabel )
                 biasVar = tf.Variable(tf.zeros([self.c_siz]),
@@ -476,33 +476,14 @@ class ButterflyLayer1D(tf.keras.layers.Layer):
 
         if self.otype == "r":
             mat = np.empty((1,self.c_siz,self.k_filter_siz))
-            mat[0,:,:] = self.matassign_c2c(KVal*LMat.T) \
+            mat[0,:,:] = matassign_c2c(KVal*LMat.T) \
                     [:,range(0,4*self.k_filter_siz,4)]
         else:
             mat = np.empty((1,self.c_siz,2*self.k_filter_siz))
-            tmpmat = self.matassign_c2c(KVal*LMat.T)
+            tmpmat = matassign_c2c(KVal*LMat.T)
             for it in range(self.k_filter_siz):
                 mat[0,:,2*it]   = tmpmat[:,4*it]
                 mat[0,:,2*it+1] = tmpmat[:,4*it+1]
 
         self.KFilterVar = tf.Variable( mat.astype(np.float32),
                 name="Filter_Out" )
-
-    def matassign_c2c(self,val):
-        m = np.size(val,0)
-        n = np.size(val,1)
-        mat = np.empty((4*m,4*n))
-        for it in range(n):
-            mat[range(0,4*m,4),4*it]   =  val.real[:,it]
-            mat[range(1,4*m,4),4*it]   = -val.imag[:,it]
-            mat[range(2,4*m,4),4*it]   = -val.real[:,it]
-            mat[range(3,4*m,4),4*it]   =  val.imag[:,it]
-    
-            mat[range(0,4*m,4),4*it+1] =  val.imag[:,it]
-            mat[range(1,4*m,4),4*it+1] =  val.real[:,it]
-            mat[range(2,4*m,4),4*it+1] = -val.imag[:,it]
-            mat[range(3,4*m,4),4*it+1] = -val.real[:,it]
-    
-        mat[:,range(2,4*n,4)] = -mat[:,range(0,4*n,4)]
-        mat[:,range(3,4*n,4)] = -mat[:,range(1,4*n,4)]
-        return mat

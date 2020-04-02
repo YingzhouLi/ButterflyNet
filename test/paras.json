@@ -1,14 +1,14 @@
 {
     "neural network": {
-        "input size": 32,
-        "output size": 128,
+        "input size": 128,
+        "output size": 1024,
         "channel size": 16,
         "inout type": "r2r",
-        "num of layers before switch": 2,
-        "num of layers after switch": 5,
+        "num of layers before switch": 5,
+        "num of layers after switch": 4,
         "prefixed": true,
-        "input range": [0, 0.25],
-        "output range": [-64, 64]
+        "input range": [0, 0.125],
+        "output range": [-512, 512]
     },
     "train and test": {
         "batch size": 10,
