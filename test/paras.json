@@ -2,10 +2,10 @@
     "neural network": {
         "neural network type": "bnet",
         "N": 1024,
-        "channel size": 12,
+        "channel size": 16,
         "inout type": "r2c",
-        "num of layers before switch": 8,
-        "num of layers after switch": 1,
+        "num of layers before switch": 5,
+        "num of layers after switch": 2,
         "prefixed": true,
         "input range": [0, 1],
         "output range": [0, 128]
@@ -17,7 +17,8 @@
         "report frequency": 10,
         "data set type": "dft",
         "adam": {
-            "learningRate": 0.001,
+            "learning rate": 0.001,
+            "decay rate": 0.99,
             "beta1": 0.9,
             "beta2": 0.999
         }

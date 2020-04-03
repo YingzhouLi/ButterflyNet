@@ -81,7 +81,7 @@ print("max num of iteration:         %6d" % (max_iter))
 print("report frequency:             %6d" % (report_freq))
 print("data set type:                %6s" % (ds_type))
 print("training algorithm:           %6s" % (train_algo))
-print("    learning rate:            %6.2e" % (learn_rate))
+print("    learning rate:          %6.2e" % (learn_rate))
 if decay_rate:
     print("    decay rate:               %6.4f" % (decay_rate))
 print("    beta1:                    %6.4f" % (beta1))
@@ -125,7 +125,7 @@ dataset.batch_size(batch_siz)
 
 if decay_rate:
     optimizer = tf.keras.optimizers.Adam(learning_rate=learn_rate,
-        beta_1=beta1, beta_2=beta2, decay_rate=decay_rate)
+        beta_1=beta1, beta_2=beta2, decay=decay_rate)
 else:
     optimizer = tf.keras.optimizers.Adam(learning_rate=learn_rate,
         beta_1=beta1, beta_2=beta2)
@@ -138,20 +138,22 @@ def train_one_step(model, optimizer, x, ytrue):
     with tf.GradientTape() as tape:
         y = model(x)
         loss = compute_loss(y,ytrue)
+        relerr = compute_relative_error(y,ytrue)
     grads = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(grads, model.trainable_variables))
-    return loss
+    return loss, relerr
 
 def train(model, optimizer, dataset):
     loss = 0.0
     starttim = time.time()
     for it in range(max_iter):
         x, ytrue = dataset.gen_data()
-        loss = train_one_step(model, optimizer, x, ytrue)
+        loss, relerr = train_one_step(model, optimizer, x, ytrue)
         if it % report_freq == 0:
             endtim = time.time()
-            print("Iter %6d:  loss %14.8e,  time elapsed %8.2f" \
-                    % (it, loss.numpy(), endtim-starttim))
+            print(("Iter %6d:  loss %14.8e,  relative error: %14.8e,  " \
+                    + "time elapsed %8.2f") \
+                    % (it, loss.numpy(), relerr.numpy(), endtim-starttim))
 
 train(model, optimizer, dataset)
 

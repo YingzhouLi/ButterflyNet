@@ -2,26 +2,25 @@
     "neural network": {
         "neural network type": "bnet",
         "N": 1024,
-        "channel size": 12,
+        "channel size": 16,
         "inout type": "r2c",
         "num of layers before switch": 5,
-        "num of layers after switch": 4,
+        "num of layers after switch": 2,
         "prefixed": true,
         "input range": [0, 1],
         "output range": [0, 128]
     },
     "train and test": {
-        "batch size": 128,
+        "batch size": 256,
         "num of test data": 1000,
-        "max num of iteration": 20000,
+        "max num of iteration": 10000,
         "report frequency": 10,
         "data set type": "dft",
         "adam": {
-            "learning rate": 1e-5,
-            "decay rate": [],
+            "learning rate": 0.001,
+            "decay rate": 0.99,
             "beta1": 0.9,
             "beta2": 0.999
-        },
-        "save model path": "./dft/saved_models/bnet_lfreq_Lk4_prefixed"
+        }
     }
 }

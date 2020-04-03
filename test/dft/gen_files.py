@@ -19,7 +19,7 @@ for nn_type in nn_type_list:
                 paras['neural network']['neural network type'] = nn_type
                 paras['neural network']['prefixed'] = prefixed
                 paras['neural network']['num of layers before switch'] \
-                        = 9-Lk
+                        = 8-Lk
                 paras['neural network']['num of layers after switch'] = Lk
                 paras['neural network']['output range'] = freq
 
