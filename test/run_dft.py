@@ -18,18 +18,29 @@ ttparas = paras['train and test']
 
 #=========================================================
 #----- Neural Network Parameters Setup
-in_siz   = nnparas['input size']
-out_siz  = nnparas['output size']
+nn_type  = nnparas['neural network type']
+N        = nnparas['N']
 c_siz    = nnparas['channel size']
 io_type  = nnparas.get('inout type','r2c')
-L        = nnparas.get('num of layers', -1)
 Lx       = nnparas.get('num of layers before switch',-1)
 Lk       = nnparas.get('num of layers after switch',-1)
 prefixed = nnparas.get('prefixed', False)
 x_range  = nnparas.get('input range',[])
 k_range  = nnparas.get('output range',[])
 
+if (io_type.lower() == 'r2r') or (io_type.lower() == 'r2c'):
+    in_siz = N*(x_range[1]-x_range[0])
+else:
+    in_siz = 2*N*(x_range[1]-x_range[0])
+if (io_type.lower() == 'r2r') or (io_type.lower() == 'c2r'):
+    out_siz = k_range[1] - k_range[0]
+else:
+    out_siz = 2*(k_range[1] - k_range[0])
+L = Lx+Lk
+
 print("=========== Neural Network Parameters ==============")
+print("neural network type:      %10s" % (nn_type))
+print("N:                            %6d" % (N))
 print("input size:                   %6d" % (in_siz))
 print("output size:                  %6d" % (out_siz))
 print("channel size:                 %6d" % (c_siz))
@@ -57,8 +68,11 @@ train_algo  = train_algo.lower()
 if train_algo == 'adam':
     taparas = ttparas.get('adam',[])
 learn_rate  = taparas.get('learning rate', 1e-3)
+decay_rate  = taparas.get('decay rate', [])
 beta1       = taparas.get('beta1', 0.9)
 beta2       = taparas.get('beta2', 0.999)
+
+save_path   = ttparas.get('save model path', "")
 
 print("=========== Train and Test Parameters ==============")
 print("num of test data:             %6d" % (n_test))
@@ -67,23 +81,36 @@ print("max num of iteration:         %6d" % (max_iter))
 print("report frequency:             %6d" % (report_freq))
 print("data set type:                %6s" % (ds_type))
 print("training algorithm:           %6s" % (train_algo))
-print("    learning rate:            %6.4f" % (learn_rate))
+print("    learning rate:            %6.2e" % (learn_rate))
+if decay_rate:
+    print("    decay rate:               %6.4f" % (decay_rate))
 print("    beta1:                    %6.4f" % (beta1))
 print("    beta2:                    %6.4f" % (beta2))
+print("save model path:              %6s" % (save_path))
 print("")
 
 
 #=========================================================
 #----- Network Preparation
-bnet = models.ButterflyNet1D(in_siz, out_siz, io_type, c_siz,
-        L, Lx, Lk, prefixed, x_range, k_range)
 
-bnet.summary()
+if nn_type  == "bnet":
+    model = models.ButterflyNet1D(in_siz, out_siz, io_type, c_siz,
+            L, Lx, Lk, prefixed, x_range, k_range)
+else:
+    model = models.InflatedButterflyNet1D(in_siz, out_siz, io_type, c_siz,
+            L, Lx, Lk, prefixed, x_range, k_range)
+
+model.summary()
 
 def compute_loss(y,ytrue):
     nfrac = tf.reduce_sum(tf.math.squared_difference(y,ytrue),axis=[1])
     dfrac = tf.reduce_sum(tf.square(ytrue), axis=[1])
     return tf.reduce_mean(tf.divide(nfrac,dfrac))
+
+def compute_relative_error(y,ytrue):
+    nfrac = tf.reduce_sum(tf.math.squared_difference(y,ytrue),axis=[1])
+    dfrac = tf.reduce_sum(tf.square(ytrue), axis=[1])
+    return tf.reduce_mean(tf.sqrt(tf.divide(nfrac,dfrac)))
 
 def xdistfunc(siz):
     return np.random.uniform(-1,1,size=siz)
@@ -96,8 +123,13 @@ if ds_type.lower() == 'dft':
             x_range=x_range, k_range=k_range)
 dataset.batch_size(batch_siz)
 
-optimizer = tf.keras.optimizers.Adam(learning_rate=learn_rate,
+if decay_rate:
+    optimizer = tf.keras.optimizers.Adam(learning_rate=learn_rate,
+        beta_1=beta1, beta_2=beta2, decay_rate=decay_rate)
+else:
+    optimizer = tf.keras.optimizers.Adam(learning_rate=learn_rate,
         beta_1=beta1, beta_2=beta2)
+
 
 #=========================================================
 #----- Step by Step Training
@@ -118,7 +150,17 @@ def train(model, optimizer, dataset):
         loss = train_one_step(model, optimizer, x, ytrue)
         if it % report_freq == 0:
             endtim = time.time()
-            print("Iter %6d:  loss %10e,  time elapsed %8.2f" \
+            print("Iter %6d:  loss %14.8e,  time elapsed %8.2f" \
                     % (it, loss.numpy(), endtim-starttim))
 
-train(bnet, optimizer, dataset)
+train(model, optimizer, dataset)
+
+if save_path != "":
+    model.save_weights(save_path)
+
+x, ytrue = dataset.gen_data(n_test)
+y = model(x)
+loss = compute_loss(y,ytrue)
+relerr = compute_relative_error(y,ytrue)
+print("Testing Result :  loss %14.8e,  relative error: %14.8e" \
+                    % (loss.numpy(), relerr.numpy()))

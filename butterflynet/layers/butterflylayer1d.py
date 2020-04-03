@@ -17,7 +17,7 @@ class ButterflyLayer1D(tf.keras.layers.Layer):
         self.Lk = nlvlk
         if self.L < 0:
             self.L = self.Lx+self.Lk
-        else:
+        elif (self.Lx < 0) or (self.Lk < 0):
             self.Lx = (self.L+1)//2
             self.Lk = self.L//2
 
@@ -184,11 +184,11 @@ class ButterflyLayer1D(tf.keras.layers.Layer):
     def buildRand(self):
         if self.itype == "r":
             self.XFilterVar = tf.Variable( tf.random.normal(
-                [self.x_filter_siz, 1, self.c_siz]),
+                [self.x_filter_siz, 1, self.c_siz],stddev=0.3),
                 name="Filter_In" )
         else:
             self.XFilterVar = tf.Variable( tf.random.normal(
-                [2*self.x_filter_siz, 1, self.c_siz]),
+                [2*self.x_filter_siz, 1, self.c_siz],stddev=0.3),
                 name="Filter_In" )
         self.XBiasVar = tf.Variable( tf.zeros([self.c_siz]),
             name="Bias_In" )
@@ -203,7 +203,7 @@ class ButterflyLayer1D(tf.keras.layers.Layer):
             for itk in range(0,2**lvl):
                 varLabel = "LVL_%02d_%04d" % (lvl, itk)
                 filterVar = tf.Variable(
-                    tf.random.normal([2,self.c_siz,self.c_siz]),
+                    tf.random.normal([2,self.c_siz,self.c_siz],stddev=0.3),
                     name="Filter_"+varLabel )
                 biasVar = tf.Variable(tf.zeros([self.c_siz]),
                     name="Bias_"+varLabel )
@@ -218,7 +218,7 @@ class ButterflyLayer1D(tf.keras.layers.Layer):
             for itk in range(0,2**self.Lx1):
                 varLabel = "LVL_%02d_%04d" % (lvl, itk)
                 filterVar = tf.Variable(
-                    tf.random.normal([2,self.c_siz,self.c_siz]),
+                    tf.random.normal([2,self.c_siz,self.c_siz],stddev=0.3),
                     name="Filter_"+varLabel )
                 biasVar = tf.Variable(tf.zeros([self.c_siz]),
                     name="Bias_"+varLabel )
@@ -235,7 +235,8 @@ class ButterflyLayer1D(tf.keras.layers.Layer):
             for itx in range(0,2**self.Lk4):
                 varLabel = "LVL_Mid_%04d_%04d" % (itk,itx)
                 denseVar = tf.Variable(
-                        tf.random.normal([self.c_siz,self.c_siz]),
+                        tf.random.normal(
+                        [self.c_siz,self.c_siz],stddev=0.3),
                         name="Dense_"+varLabel )
                 biasVar = tf.Variable(tf.zeros([self.c_siz]),
                         name="Bias_"+varLabel )
@@ -250,7 +251,8 @@ class ButterflyLayer1D(tf.keras.layers.Layer):
             for itx in range(0,2**(self.Lk4+1)):
                 varLabel = "LVL_%02d_%04d" % (lvl, itx)
                 filterVar = tf.Variable(
-                        tf.random.normal([1,self.c_siz,self.c_siz]),
+                        tf.random.normal(
+                        [1,self.c_siz,self.c_siz],stddev=0.3),
                         name="Filter_"+varLabel )
                 biasVar = tf.Variable(tf.zeros([self.c_siz]),
                         name="Bias_"+varLabel )
@@ -265,7 +267,8 @@ class ButterflyLayer1D(tf.keras.layers.Layer):
             for itx in range(0,2**(self.L-lvl+1)):
                 varLabel = "LVL_%02d_%04d" % (lvl, itx)
                 filterVar = tf.Variable(
-                        tf.random.normal([2,self.c_siz,self.c_siz]),
+                        tf.random.normal(
+                        [2,self.c_siz,self.c_siz],stddev=0.3),
                         name="Filter_"+varLabel )
                 biasVar = tf.Variable(tf.zeros([self.c_siz]),
                         name="Bias_"+varLabel )
@@ -276,11 +279,11 @@ class ButterflyLayer1D(tf.keras.layers.Layer):
 
         if self.otype == "r":
             self.KFilterVar = tf.Variable( tf.random.normal(
-                [1, self.c_siz, self.k_filter_siz]),
+                [1, self.c_siz, self.k_filter_siz],stddev=0.3),
                 name="Filter_Out" )
         else:
             self.KFilterVar = tf.Variable( tf.random.normal(
-                [1, self.c_siz, 2*self.k_filter_siz]),
+                [1, self.c_siz, 2*self.k_filter_siz],stddev=0.3),
                 name="Filter_Out" )
 
     #==================================================================

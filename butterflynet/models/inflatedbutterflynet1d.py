@@ -30,13 +30,13 @@ class InflatedButterflyNet1D(tf.keras.Model):
         n_paras = tf.size(self.iblayer1d.XFilterVar).numpy() \
                 + tf.size(self.iblayer1d.XBiasVar).numpy()
         tot_n_paras = n_paras
-        print("    Interpolation  0:         %6d" % (n_paras))
+        print("    Interpolation  0:     %10d" % (n_paras))
 
         for lvl in range(1,self.iblayer1d.Lx+1):
             n_paras = tf.size(self.iblayer1d.FilterVars[lvl]).numpy() \
                 + tf.size(self.iblayer1d.BiasVars[lvl]).numpy()
             tot_n_paras = tot_n_paras + n_paras
-            print("    Recursion     %2d:         %6d" % (lvl,n_paras))
+            print("    Recursion     %2d:     %10d" % (lvl,n_paras))
 
         n_paras = 0
         for itk in range(len(self.iblayer1d.MidDenseVars)):
@@ -45,17 +45,17 @@ class InflatedButterflyNet1D(tf.keras.Model):
                     +tf.size(self.iblayer1d.MidDenseVars[itk][itx]).numpy()\
                     +tf.size(self.iblayer1d.MidBiasVars[itk][itx]).numpy()
         tot_n_paras = tot_n_paras + n_paras
-        print("    Switch          :         %6d" % (n_paras))
+        print("    Switch          :     %10d" % (n_paras))
 
         for lvl in range(self.iblayer1d.Lx+1,self.iblayer1d.L+1):
             n_paras = tf.size(self.iblayer1d.FilterVars[lvl]).numpy() \
                + tf.size(self.iblayer1d.BiasVars[lvl]).numpy()
             tot_n_paras = tot_n_paras + n_paras
-            print("    Recursion     %2d:         %6d" % (lvl,n_paras))
+            print("    Recursion     %2d:     %10d" % (lvl,n_paras))
 
         n_paras = tf.size(self.iblayer1d.KFilterVar).numpy()
         tot_n_paras = tot_n_paras + n_paras
-        print("    Interpolation %2d:         %6d" \
+        print("    Interpolation %2d:     %10d" \
                 % (self.iblayer1d.L+1,n_paras))
-        print("total num of paras          %8d" % tot_n_paras)
+        print("total num of paras      %12d" % tot_n_paras)
         print("")
