@@ -11,10 +11,10 @@
         "output range": [0, 128]
     },
     "data set": {
-        "data set type": "dft",
+        "data set type": "dft gaussian smooth",
         "dft gaussian smooth": {
-            "gaussian means": [0],
-            "gaussian stds": [10]
+            "gaussian means": [0, 0],
+            "gaussian stds": [10, 5]
         }
     },
     "train and test": {

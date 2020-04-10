@@ -62,12 +62,18 @@ print("")
 #=========================================================
 #----- Data Set Parameters Setup
 ds_type     = dsparas.get('data set type','dft')
-gaparas     = dsparas.get('dft gaussian smooth',[])
-g_means     = gaparas.get('gaussian means', [])
-g_stds      = gaparas.get('gaussian stds', [])
+if ds_type.lower() == 'dft gaussian smooth':
+    gaparas     = dsparas.get('dft gaussian smooth',[])
+    g_means     = gaparas.get('gaussian means', [])
+    g_stds      = gaparas.get('gaussian stds', [])
 
 print("=================== Data Set Parameters ====================")
 print("data set type:                %30s" % (ds_type))
+if ds_type.lower() == 'dft gaussian smooth':
+    print('\n'.join([ \
+            ( "    gaussian mean %3d:        %30.3f\n" \
+            + "    gaussian std  %3d:        %30.3f" ) \
+            % (m, g_means[m], m, g_stds[m]) for m in range(len(g_means))]))
 print("")
 
 #=========================================================
