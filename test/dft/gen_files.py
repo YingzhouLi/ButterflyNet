@@ -9,9 +9,9 @@ Lk_list       = range(1,4)
 prefixed_list = [True, False]
 freq_list     = [[0,128],[256,384]]
 
-script_folder = os.path.dirname(os.path.realpath(__file__))
-
 workdir = os.path.abspath(os.getcwd())
+
+script_folder = './dft/'
 
 outfolder  = script_folder+'/script/out/'
 errfolder  = script_folder+'/script/err/'
