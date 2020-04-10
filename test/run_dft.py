@@ -9,11 +9,13 @@ import time
 
 from butterflynet import models
 from butterflynet import datasets
+from butterflynet.utils import gaussianfun
 
 json_file = open(sys.argv[1])
 paras = json.load(json_file)
 
 nnparas = paras['neural network']
+dsparas = paras['data set']
 ttparas = paras['train and test']
 
 #=========================================================
@@ -56,16 +58,25 @@ print("output range:                 [%6.2f, %6.2f)" \
 print("")
 
 #=========================================================
+#----- Data Set Parameters Setup
+ds_type     = dsparas.get('data set type','dft')
+gaparas     = dsparas.get('dft gaussian smooth',[])
+g_means     = gaparas.get('gaussian means', [])
+g_stds      = gaparas.get('gaussian stds', [])
+
+print("============== Data Set Parameters =================")
+print("data set type:                %6s" % (ds_type))
+print("")
+
+#=========================================================
 #----- Train and Test Parameters Setup
 n_test      = ttparas.get('num of test data', 1000)
 batch_siz   = ttparas.get('batch size', 128)
 max_iter    = ttparas.get('max num of iteration', 1e4)
 report_freq = ttparas.get('report frequency', 10)
-ds_type     = ttparas.get('data set type','dft')
 train_algo  = ttparas.get('training algorithm','adam')
 
-train_algo  = train_algo.lower()
-if train_algo == 'adam':
+if train_algo.lower() == 'adam':
     taparas = ttparas.get('adam',[])
 learn_rate  = taparas.get('learning rate', 1e-3)
 decay_rate  = taparas.get('decay rate', [])
@@ -112,14 +123,18 @@ def compute_relative_error(y,ytrue):
     dfrac = tf.reduce_sum(tf.square(ytrue), axis=[1])
     return tf.reduce_mean(tf.sqrt(tf.divide(nfrac,dfrac)))
 
-def xdistfunc(siz):
-    return np.random.uniform(-1,1,size=siz)
+def magfunc(x):
+    return gaussianfun(x, g_means, g_stds)
+
+if (io_type.lower() == 'r2r') or (io_type.lower() == 'r2c'):
+    N = int(in_siz/(x_range[1]-x_range[0]))
+else:
+    N = int(in_siz/2/(x_range[1]-x_range[0]))
 if ds_type.lower() == 'dft':
-    if (io_type.lower() == 'r2r') or (io_type.lower() == 'r2c'):
-        N = int(in_siz/(x_range[1]-x_range[0]))
-    else:
-        N = int(in_siz/2/(x_range[1]-x_range[0]))
-    dataset = datasets.DFT1D(N, io_type, xdistfunc,
+    dataset = datasets.DFT1D(N, io_type,
+            x_range=x_range, k_range=k_range)
+elif ds_type.lower() == 'dft gaussian smooth':
+    dataset = datasets.DFT1D(N, io_type, k_magfunc = magfunc,
             x_range=x_range, k_range=k_range)
 dataset.batch_size(batch_siz)
 
