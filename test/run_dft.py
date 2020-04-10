@@ -7,8 +7,8 @@ import json
 import numpy as np
 import time
 import matplotlib
-import matplotlib.pyplot as plt
 matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 from butterflynet import models
 from butterflynet import datasets

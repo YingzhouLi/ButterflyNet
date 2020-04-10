@@ -20,7 +20,7 @@
     "train and test": {
         "batch size": 256,
         "num of test data": 1000,
-        "max num of iteration": 20000,
+        "max num of iteration": 20,
         "report frequency": 10,
         "adam": {
             "learning rate": "exponential decay",
