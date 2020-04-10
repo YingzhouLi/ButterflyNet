@@ -6,6 +6,8 @@ import tensorflow as tf
 import json
 import numpy as np
 import time
+import matplotlib
+import matplotlib.pyplot as plt
 
 from butterflynet import models
 from butterflynet import datasets
@@ -40,20 +42,20 @@ else:
     out_siz = 2*(k_range[1] - k_range[0])
 L = Lx+Lk
 
-print("=========== Neural Network Parameters ==============")
-print("neural network type:      %10s" % (nn_type))
-print("N:                            %6d" % (N))
-print("input size:                   %6d" % (in_siz))
-print("output size:                  %6d" % (out_siz))
-print("channel size:                 %6d" % (c_siz))
-print("inout type:                   %6s" % (io_type))
-print("num of layers:                %6d" % (L))
-print("num of layers before switch:  %6d" % (Lx))
-print("num of layers after switch:   %6d" % (Lk))
-print("prefixed:                     %6r" % (prefixed))
-print("input range:                  [%6.2f, %6.2f)" \
+print("================ Neural Network Parameters =================")
+print("neural network type:          %30s" % (nn_type))
+print("N:                            %30d" % (N))
+print("input size:                   %30d" % (in_siz))
+print("output size:                  %30d" % (out_siz))
+print("channel size:                 %30d" % (c_siz))
+print("inout type:                   %30s" % (io_type))
+print("num of layers:                %30d" % (L))
+print("num of layers before switch:  %30d" % (Lx))
+print("num of layers after switch:   %30d" % (Lk))
+print("prefixed:                     %30r" % (prefixed))
+print("input range:                        [%10.3f, %10.3f)" \
         % (x_range[0], x_range[1]))
-print("output range:                 [%6.2f, %6.2f)" \
+print("output range:                       [%10.3f, %10.3f)" \
         % (k_range[0], k_range[1]))
 print("")
 
@@ -64,8 +66,8 @@ gaparas     = dsparas.get('dft gaussian smooth',[])
 g_means     = gaparas.get('gaussian means', [])
 g_stds      = gaparas.get('gaussian stds', [])
 
-print("============== Data Set Parameters =================")
-print("data set type:                %6s" % (ds_type))
+print("=================== Data Set Parameters ====================")
+print("data set type:                %30s" % (ds_type))
 print("")
 
 #=========================================================
@@ -78,26 +80,41 @@ train_algo  = ttparas.get('training algorithm','adam')
 
 if train_algo.lower() == 'adam':
     taparas = ttparas.get('adam',[])
-learn_rate  = taparas.get('learning rate', 1e-3)
-decay_rate  = taparas.get('decay rate', [])
+lr_type     = taparas.get('learning rate', 1e-3)
 beta1       = taparas.get('beta1', 0.9)
 beta2       = taparas.get('beta2', 0.999)
 
-save_path   = ttparas.get('save model path', "")
+if not isinstance(lr_type, (float)):
+    lrparas = ttparas.get(lr_type,[])
+    if (lr_type.lower() == 'exponential decay') \
+            or (lr_type.lower() == 'inverse time decay'):
+        init_learn_rate = lrparas.get('initial learning rate', 1e-3)
+        decay_steps     = lrparas.get('decay steps', 100)
+        decay_rate      = lrparas.get('decay rate', 0.95)
 
-print("=========== Train and Test Parameters ==============")
-print("num of test data:             %6d" % (n_test))
-print("batch size:                   %6d" % (batch_siz))
-print("max num of iteration:         %6d" % (max_iter))
-print("report frequency:             %6d" % (report_freq))
-print("data set type:                %6s" % (ds_type))
-print("training algorithm:           %6s" % (train_algo))
-print("    learning rate:          %6.2e" % (learn_rate))
-if decay_rate:
-    print("    decay rate:               %6.4f" % (decay_rate))
-print("    beta1:                    %6.4f" % (beta1))
-print("    beta2:                    %6.4f" % (beta2))
-print("save model path:              %6s" % (save_path))
+save_path   = ttparas.get('save folder path', [])
+
+
+print("================ Train and Test Parameters =================")
+print("num of test data:             %30d" % (n_test))
+print("batch size:                   %30d" % (batch_siz))
+print("max num of iteration:         %30d" % (max_iter))
+print("report frequency:             %30d" % (report_freq))
+print("training algorithm:           %30s" % (train_algo))
+if isinstance(lr_type, (float)):
+    print("    learning rate:            %30.3e" % (lr_type))
+else:
+    print("    learning rate:            %30s" % (lr_type))
+    if (lr_type.lower() == 'exponential decay') \
+            or (lr_type.lower() == 'inverse time decay'):
+        print("        initial learning rate:    %26.3e" % (init_learn_rate))
+        print("        decay steps:              %26d" % (decay_steps))
+        print("        decay rate:               %26.4f" % (decay_rate))
+
+print("    beta1:                    %30.4f" % (beta1))
+print("    beta2:                    %30.4f" % (beta2))
+if save_path:
+    print("save folder path:             %30s" % (save_path))
 print("")
 
 
@@ -113,6 +130,15 @@ else:
 
 model.summary()
 
+def magfunc(x):
+    return gaussianfun(x, g_means, g_stds)
+if ds_type.lower() == 'dft':
+    dataset = datasets.DFT1D(N, io_type, x_range=x_range, k_range=k_range)
+elif ds_type.lower() == 'dft gaussian smooth':
+    dataset = datasets.DFT1D(N, io_type, k_magfunc = magfunc,
+            x_range=x_range, k_range=k_range)
+dataset.batch_size(batch_siz)
+
 def compute_loss(y,ytrue):
     nfrac = tf.reduce_sum(tf.math.squared_difference(y,ytrue),axis=[1])
     dfrac = tf.reduce_sum(tf.square(ytrue), axis=[1])
@@ -123,26 +149,20 @@ def compute_relative_error(y,ytrue):
     dfrac = tf.reduce_sum(tf.square(ytrue), axis=[1])
     return tf.reduce_mean(tf.sqrt(tf.divide(nfrac,dfrac)))
 
-def magfunc(x):
-    return gaussianfun(x, g_means, g_stds)
 
-if (io_type.lower() == 'r2r') or (io_type.lower() == 'r2c'):
-    N = int(in_siz/(x_range[1]-x_range[0]))
+if isinstance(lr_type, (float)):
+    learn_rate = lr_type
 else:
-    N = int(in_siz/2/(x_range[1]-x_range[0]))
-if ds_type.lower() == 'dft':
-    dataset = datasets.DFT1D(N, io_type,
-            x_range=x_range, k_range=k_range)
-elif ds_type.lower() == 'dft gaussian smooth':
-    dataset = datasets.DFT1D(N, io_type, k_magfunc = magfunc,
-            x_range=x_range, k_range=k_range)
-dataset.batch_size(batch_siz)
+    if (lr_type.lower() == 'exponential decay'):
+        learn_rate = tf.keras.optimizers.schedules.ExponentialDecay(
+                initial_learning_rate = init_learn_rate,
+                decay_steps = decay_steps, decay_rate = decay_rate)
+    elif (lr_type.lower() == 'inverse time decay'):
+        learn_rate = tf.keras.optimizers.schedules.InverseTimeDecay(
+                initial_learning_rate = init_learn_rate,
+                decay_steps = decay_steps, decay_rate = decay_rate)
 
-if decay_rate:
-    optimizer = tf.keras.optimizers.Adam(learning_rate=learn_rate,
-        beta_1=beta1, beta_2=beta2, decay=decay_rate)
-else:
-    optimizer = tf.keras.optimizers.Adam(learning_rate=learn_rate,
+optimizer = tf.keras.optimizers.Adam(learning_rate=learn_rate,
         beta_1=beta1, beta_2=beta2)
 
 
@@ -161,23 +181,43 @@ def train_one_step(model, optimizer, x, ytrue):
 def train(model, optimizer, dataset):
     loss = 0.0
     starttim = time.time()
+    losshist = []
+    relerrhist = []
     for it in range(max_iter):
         x, ytrue = dataset.gen_data()
         loss, relerr = train_one_step(model, optimizer, x, ytrue)
+        losshist.append(loss.numpy())
+        relerrhist.append(relerr.numpy())
         if it % report_freq == 0:
             endtim = time.time()
-            print(("Iter %6d:  loss %14.8e,  relative error: %14.8e,  " \
-                    + "time elapsed %8.2f") \
+            print(("Iter %8d:  loss %14.8e,  relerr: %14.8e,  " \
+                    + "runtime: %8.2f") \
                     % (it, loss.numpy(), relerr.numpy(), endtim-starttim))
+    endtim = time.time()
+    print(("Iter %8d:  loss %14.8e,  relerr: %14.8e,  " \
+            + "runtime: %8.2f") \
+            % (it, loss.numpy(), relerr.numpy(), endtim-starttim))
+    return losshist, relerrhist
 
-train(model, optimizer, dataset)
+losshist, relerrhist = train(model, optimizer, dataset)
 
-if save_path != "":
-    model.save_weights(save_path)
+
+if save_path:
+    model.save_weights(save_path+'/model')
+    np.savez_compressed(save_path+'/hists.npz', losshist=losshist,
+            relerrhist=relerrhist)
+    plt.plot(relerrhist)
+    plt.xlabel('Iteration')
+    plt.ylabel('Relative Error')
+    plt.savefig(save_path+'/relerrhist.pdf')
+    plt.clf()
 
 x, ytrue = dataset.gen_data(n_test)
+starttim = time.time()
 y = model(x)
 loss = compute_loss(y,ytrue)
 relerr = compute_relative_error(y,ytrue)
-print("Testing Result :  loss %14.8e,  relative error: %14.8e" \
-                    % (loss.numpy(), relerr.numpy()))
+endtim = time.time()
+print(("Test Result  :  loss %14.8e,  relerr: %14.8e,  " \
+        + "runtime: %8.2f") \
+        % (loss.numpy(), relerr.numpy(), endtim-starttim))

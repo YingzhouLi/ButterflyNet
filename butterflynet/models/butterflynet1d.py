@@ -16,21 +16,20 @@ class ButterflyNet1D(tf.keras.Model):
         return self.blayer1d(in_data)
 
     def summary(self, output_stream = sys.stdout):
-        print("======== ButterflyNet1D Summary ===========")
-        print("num of layers:                %6d" % (self.blayer1d.L))
-        print("num of layers before switch:  %6d" % (self.blayer1d.Lx))
-        print("    branching:                %6d" % (self.blayer1d.Lx1))
-        print("    fixed:                    %6d" % (self.blayer1d.Lx2))
-        print("num of layers after switch:   %6d" % (self.blayer1d.Lk))
-        print("    fixed:                    %6d" % (self.blayer1d.Lk3))
-        print("    branching:                %6d" % (self.blayer1d.Lk4))
-        print("")
-
-        print("Number of parameters")
+        print("================== ButterflyNet1D Summary ==================")
+        print("num of layers:                %30d" % (self.blayer1d.L))
+        print("num of layers before switch:  %30d" % (self.blayer1d.Lx))
+        print("    branching:                %30d" % (self.blayer1d.Lx1))
+        print("    fixed:                    %30d" % (self.blayer1d.Lx2))
+        print("num of layers after switch:   %30d" % (self.blayer1d.Lk))
+        print("    fixed:                    %30d" % (self.blayer1d.Lk3))
+        print("    branching:                %30d" % (self.blayer1d.Lk4))
+        print("------------------------------------------------------------")
+        print("Parameter Count")
         n_paras = tf.size(self.blayer1d.XFilterVar).numpy() \
                 + tf.size(self.blayer1d.XBiasVar).numpy()
         tot_n_paras = n_paras
-        print("    Interpolation  0:     %10d" % (n_paras))
+        print("    Interpolation    0:       %30d" % (n_paras))
 
         for lvl in range(1,self.blayer1d.Lx+1):
             n_paras = 0
@@ -39,7 +38,7 @@ class ButterflyNet1D(tf.keras.Model):
                     + tf.size(self.blayer1d.FilterVars[lvl][it]).numpy() \
                     + tf.size(self.blayer1d.BiasVars[lvl][it]).numpy()
             tot_n_paras = tot_n_paras + n_paras
-            print("    Recursion     %2d:     %10d" % (lvl,n_paras))
+            print("    Recursion      %3d:       %30d" % (lvl,n_paras))
 
         n_paras = 0
         for itk in range(len(self.blayer1d.MidDenseVars)):
@@ -48,7 +47,7 @@ class ButterflyNet1D(tf.keras.Model):
                     + tf.size(self.blayer1d.MidDenseVars[itk][itx]).numpy()\
                     + tf.size(self.blayer1d.MidBiasVars[itk][itx]).numpy()
         tot_n_paras = tot_n_paras + n_paras
-        print("    Switch          :     %10d" % (n_paras))
+        print("    Switch            :       %30d" % (n_paras))
 
         for lvl in range(self.blayer1d.Lx+1,self.blayer1d.L+1):
             n_paras = 0
@@ -57,11 +56,12 @@ class ButterflyNet1D(tf.keras.Model):
                     + tf.size(self.blayer1d.FilterVars[lvl][it]).numpy() \
                     + tf.size(self.blayer1d.BiasVars[lvl][it]).numpy()
             tot_n_paras = tot_n_paras + n_paras
-            print("    Recursion     %2d:     %10d" % (lvl,n_paras))
+            print("    Recursion      %3d:       %30d" % (lvl,n_paras))
 
         n_paras = tf.size(self.blayer1d.KFilterVar).numpy()
         tot_n_paras = tot_n_paras + n_paras
-        print("    Interpolation %2d:     %10d" \
+        print("    Interpolation  %3d:       %30d" \
                 % (self.blayer1d.L+1,n_paras))
-        print("total num of paras      %12d" % tot_n_paras)
+        print("Total number of parameters    %30d" % tot_n_paras)
+        print("============================================================")
         print("")
