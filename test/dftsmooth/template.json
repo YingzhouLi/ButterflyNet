@@ -1,0 +1,36 @@
+{
+    "neural network": {
+        "neural network type": "bnet",
+        "N": 1024,
+        "channel size": 12,
+        "inout type": "r2c",
+        "num of layers before switch": 5,
+        "num of layers after switch": 2,
+        "prefixed": true,
+        "input range": [0, 1],
+        "output range": [0, 128]
+    },
+    "data set": {
+        "data set type": "dft gaussian smooth",
+        "dft gaussian smooth": {
+            "gaussian means": [0],
+            "gaussian stds": [5]
+    },
+    "train and test": {
+        "batch size": 256,
+        "num of test data": 1000,
+        "max num of iteration": 20000,
+        "report frequency": 10,
+        "adam": {
+            "learning rate": "exponential decay",
+            "beta1": 0.9,
+            "beta2": 0.999
+        },
+        "exponential decay": {
+            "initial learning rate": 2e-5,
+            "decay steps": 100,
+            "decay rate": 0.985
+        },
+        "save folder path": "./saved_model"
+    }
+}
