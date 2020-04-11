@@ -15,6 +15,7 @@
         "dft gaussian smooth": {
             "gaussian means": [0],
             "gaussian stds": [5]
+        }
     },
     "train and test": {
         "batch size": 256,
