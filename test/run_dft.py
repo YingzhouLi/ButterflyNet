@@ -213,7 +213,7 @@ if save_path:
     model.save_weights(save_path+'/model')
     np.savez_compressed(save_path+'/hists.npz', losshist=losshist,
             relerrhist=relerrhist)
-    plt.plot(relerrhist)
+    plt.semilogy(relerrhist)
     plt.xlabel('Iteration')
     plt.ylabel('Relative Error')
     plt.savefig(save_path+'/relerrhist.pdf')
