@@ -80,7 +80,12 @@ for nn_type in nn_type_list:
                         paras['train and test']['exponential decay'] \
                                 ['initial learning rate'] \
                                 = 1e-3
-
+                    paras["data set"]["dft gaussian smooth"] \
+                            ["gaussian means"] \
+                            =  [freq[0], -freq[0]],
+                    paras["data set"]["dft gaussian smooth"] \
+                            ["gaussian stds"] \
+                            =  [5, 5],
 
                     jsonpath = namefolder + '/para.json'
                     os.makedirs(os.path.dirname(jsonpath), exist_ok=True)
