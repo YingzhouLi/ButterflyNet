@@ -1,7 +1,7 @@
 {
     "neural network": {
         "neural network type": "bnet",
-        "N": 1024,
+        "N": 256,
         "channel size": 12,
         "inout type": "r2c",
         "num of layers before switch": 5,
@@ -14,7 +14,7 @@
         "data set type": "dft gaussian smooth",
         "dft gaussian smooth": {
             "gaussian means": [0, 0],
-            "gaussian stds": [10, 5]
+            "gaussian stds": [5, 5]
         }
     },
     "train and test": {

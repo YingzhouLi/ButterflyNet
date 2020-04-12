@@ -6,6 +6,7 @@ import tensorflow as tf
 import json
 import numpy as np
 import time
+import math
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -138,7 +139,7 @@ else:
 model.summary()
 
 def magfunc(x):
-    return gaussianfun(x, g_means, g_stds)
+    return out_siz*math.sqrt(N)*gaussianfun(x, g_means, g_stds)
 if ds_type.lower() == 'dft':
     dataset = datasets.DFT1D(N, io_type, x_range=x_range, k_range=k_range)
 elif ds_type.lower() == 'dft gaussian smooth':
