@@ -70,7 +70,7 @@ for nn_type in nn_type_list:
                             = namefolder
                     if prefixed:
                         paras['train and test']['max num of iteration'] \
-                                = 20000
+                                = 50000
                         paras['train and test']['exponential decay'] \
                                 ['initial learning rate'] \
                                 = 2e-5
