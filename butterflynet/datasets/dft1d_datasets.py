@@ -34,7 +34,7 @@ class DFT1D:
             x = it/N
             if (x >= x_range[0]) and (x < x_range[1]):
                 self.xidx.append(it)
-                np.append(self.xval,[x])
+                self.xval.append(x)
         self.xlen = len(self.xidx)
 
         fftfreqs = np.fft.fftshift(np.fft.fftfreq(N))*N + 0.1
@@ -44,7 +44,7 @@ class DFT1D:
             k = fftfreqs[it]
             if (k >= k_range[0]) and (k < k_range[1]):
                 self.kidx.append(it)
-                np.append(self.kval,[k])
+                self.kval.append(k-0.1)
         self.klen = len(self.kidx)
 
     def batch_size(self,batch_siz):

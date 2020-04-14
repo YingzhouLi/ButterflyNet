@@ -27,30 +27,34 @@ ttparas = paras['train and test']
 nn_type  = nnparas['neural network type']
 N        = nnparas['N']
 c_siz    = nnparas['channel size']
-io_type  = nnparas.get('inout type','r2c')
+in_type  = nnparas.get('in type','r')
 Lx       = nnparas.get('num of layers before switch',-1)
 Lk       = nnparas.get('num of layers after switch',-1)
 init     = nnparas.get('initializer', 'glorot_uniform')
 x_range  = nnparas.get('input range',[])
 k_range  = nnparas.get('output range',[])
+tl_type  = nnparas.get('task layer type','squaresum')
+dwidth   = nnparas.get('dense width',0)
 
-if (io_type.lower() == 'r2r') or (io_type.lower() == 'r2c'):
+if (in_type.lower() == 'r'):
     in_siz = N*(x_range[1]-x_range[0])
+    io_type = 'r2c'
 else:
     in_siz = 2*N*(x_range[1]-x_range[0])
-if (io_type.lower() == 'r2r') or (io_type.lower() == 'c2r'):
-    out_siz = k_range[1] - k_range[0]
-else:
-    out_siz = 2*(k_range[1] - k_range[0])
+    io_type = 'c2c'
+
+out_siz = 2*(k_range[1] - k_range[0])
 L = Lx+Lk
 
 print("================ Neural Network Parameters =================")
 print("neural network type:          %30s" % (nn_type))
 print("N:                            %30d" % (N))
 print("input size:                   %30d" % (in_siz))
-print("output size:                  %30d" % (out_siz))
+print("task layer type:              %30s" % (tl_type))
+if tl_type.lower() == 'dense':
+    print("    dense width:              %30d" % (dwidth))
 print("channel size:                 %30d" % (c_siz))
-print("inout type:                   %30s" % (io_type))
+print("in type:                      %30s" % (in_type))
 print("num of layers:                %30d" % (L))
 print("num of layers before switch:  %30d" % (Lx))
 print("num of layers after switch:   %30d" % (Lk))
@@ -63,15 +67,15 @@ print("")
 
 #=========================================================
 #----- Data Set Parameters Setup
-ds_type     = dsparas.get('data set type','dft')
-if ds_type.lower() == 'dft gaussian smooth':
-    gaparas     = dsparas.get('dft gaussian smooth',[])
+ds_type     = dsparas.get('data set type','energy')
+if ds_type.lower() == 'energy gaussian smooth':
+    gaparas     = dsparas.get('energy gaussian smooth',[])
     g_means     = gaparas.get('gaussian means', [])
     g_stds      = gaparas.get('gaussian stds', [])
 
 print("=================== Data Set Parameters ====================")
 print("data set type:                %30s" % (ds_type))
-if ds_type.lower() == 'dft gaussian smooth':
+if ds_type.lower() == 'energy gaussian smooth':
     print('\n'.join([ \
             ( "    gaussian mean %3d:        %30.3f\n" \
             + "    gaussian std  %3d:        %30.3f" ) \
@@ -131,30 +135,32 @@ print("")
 
 if nn_type  == "bnet":
     model = models.ButterflyNet1D(in_siz, out_siz, io_type, c_siz,
-            L, Lx, Lk, init, x_range, k_range)
+            L, Lx, Lk, init, x_range, k_range,
+            task_layer_type=tl_type, task_units=dwidth)
 else:
     model = models.InflatedButterflyNet1D(in_siz, out_siz, io_type, c_siz,
-            L, Lx, Lk, init, x_range, k_range)
+            L, Lx, Lk, init, x_range, k_range,
+            task_layer_type=tl_type, task_units=dwidth)
 
 model.summary()
 
 def magfunc(x):
     return out_siz*math.sqrt(N)*gaussianfun(x, g_means, g_stds)
-if ds_type.lower() == 'dft':
-    dataset = datasets.DFT1D(N, io_type, x_range=x_range, k_range=k_range)
-elif ds_type.lower() == 'dft gaussian smooth':
-    dataset = datasets.DFT1D(N, io_type, k_magfunc = magfunc,
+if ds_type.lower() == 'energy':
+    dataset = datasets.Energy1D(N, in_type, x_range=x_range, k_range=k_range)
+elif ds_type.lower() == 'energy gaussian smooth':
+    dataset = datasets.Energy1D(N, in_type, k_magfunc = magfunc,
             x_range=x_range, k_range=k_range)
 dataset.batch_size(batch_siz)
 
 def compute_loss(y,ytrue):
-    nfrac = tf.reduce_sum(tf.math.squared_difference(y,ytrue),axis=[1])
-    dfrac = tf.reduce_sum(tf.square(ytrue), axis=[1])
+    nfrac = tf.math.squared_difference(y,ytrue)
+    dfrac = tf.square(ytrue)
     return tf.reduce_mean(tf.divide(nfrac,dfrac))
 
 def compute_relative_error(y,ytrue):
-    nfrac = tf.reduce_sum(tf.math.squared_difference(y,ytrue),axis=[1])
-    dfrac = tf.reduce_sum(tf.square(ytrue), axis=[1])
+    nfrac = tf.math.squared_difference(y,ytrue)
+    dfrac = tf.square(ytrue)
     return tf.reduce_mean(tf.sqrt(tf.divide(nfrac,dfrac)))
 
 
@@ -209,7 +215,6 @@ def train(model, optimizer, dataset):
     return losshist, relerrhist
 
 losshist, relerrhist = train(model, optimizer, dataset)
-
 
 if save_path:
     model.save_weights(save_path+'/model')

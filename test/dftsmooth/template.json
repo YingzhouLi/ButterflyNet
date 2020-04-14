@@ -6,7 +6,7 @@
         "inout type": "r2c",
         "num of layers before switch": 5,
         "num of layers after switch": 2,
-        "prefixed": true,
+        "initializer": "dft",
         "input range": [0, 1],
         "output range": [0, 128]
     },

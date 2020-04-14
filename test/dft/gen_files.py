@@ -6,7 +6,7 @@ import numpy as np
 nn_type_list  = ['bnet', 'ibnet']
 c_siz_list    = [12, 16]
 Lk_list       = range(1,4)
-prefixed_list = [True, False]
+init_list     = ['dft', 'glorot_uniform']
 freq_list     = [[0,128],[256,384]]
 
 workdir = os.path.abspath(os.getcwd())
@@ -28,11 +28,11 @@ with open(script_folder+'/template.json') as json_file:
 for nn_type in nn_type_list:
     for c_siz in c_siz_list:
         for Lk in Lk_list:
-            for prefixed in prefixed_list:
+            for init in init_list:
                 for freqit in range(len(freq_list)):
                     freq = freq_list[freqit]
 
-                    if prefixed:
+                    if init == 'dft':
                         prefixstr = 'prefix'
                     else:
                         prefixstr = 'random'
@@ -58,8 +58,8 @@ for nn_type in nn_type_list:
                             = nn_type
                     paras['neural network']['channel size'] \
                             = c_siz
-                    paras['neural network']['prefixed'] \
-                            = prefixed
+                    paras['neural network']['initializer'] \
+                            = init
                     paras['neural network']['num of layers before switch'] \
                             = 8-Lk
                     paras['neural network']['num of layers after switch'] \
@@ -68,7 +68,7 @@ for nn_type in nn_type_list:
                             = freq
                     paras['train and test']['save folder path'] \
                             = namefolder
-                    if prefixed:
+                    if init == 'dft':
                         paras['train and test']['max num of iteration'] \
                                 = 20000
                         paras['train and test']['exponential decay'] \

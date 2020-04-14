@@ -10,7 +10,8 @@ class ButterflyLayer1D(tf.keras.layers.Layer):
     # Initialize parameters in the layer
     def __init__(self, in_siz, out_siz, io_type,
             channel_siz, nlvl = -1, nlvlx = -1, nlvlk = -1,
-            prefixed = False, in_range = [], out_range = []):
+            initializer = 'glorot_uniform',
+            in_range = [], out_range = []):
         super(ButterflyLayer1D, self).__init__()
         self.L  = nlvl
         self.Lx = nlvlx
@@ -52,14 +53,15 @@ class ButterflyLayer1D(tf.keras.layers.Layer):
         self.x_range       = in_range
         self.k_range       = out_range
 
-        if prefixed:
+        if initializer.lower() == 'dft':
             self.XFilterVar, self.XBiasVar, self.FilterVars, \
                     self.BiasVars, self.MidDenseVars, \
                     self.MidBiasVars, self.KFilterVar = self.buildDFT()
         else:
             self.XFilterVar, self.XBiasVar, self.FilterVars, \
                     self.BiasVars, self.MidDenseVars, \
-                    self.MidBiasVars, self.KFilterVar = self.buildRand()
+                    self.MidBiasVars, self.KFilterVar = \
+                    self.buildRand(initializer)
 
 
     #==================================================================
@@ -185,15 +187,20 @@ class ButterflyLayer1D(tf.keras.layers.Layer):
 
     #==================================================================
     # Initialize variables in the layer
-    def buildRand(self):
+    def buildRand(self, initializer):
+        if initializer.lower() == 'glorot_uniform':
+            randfun = tf.keras.initializers.glorot_uniform()
+        elif initializer.lower() == 'glorot_normal':
+            randfun = tf.keras.initializers.glorot_normal()
+
         if self.itype == "r":
-            XFilterVar = tf.Variable( tf.random.normal(
-                [self.x_filter_siz, 1, self.c_siz],stddev=0.3),
-                name="Filter_In" )
+            XFilterVar = tf.Variable(
+                    randfun([self.x_filter_siz, 1, self.c_siz]),
+                    name="Filter_In" )
         else:
-            XFilterVar = tf.Variable( tf.random.normal(
-                [2*self.x_filter_siz, 1, self.c_siz],stddev=0.3),
-                name="Filter_In" )
+            XFilterVar = tf.Variable(
+                    randfun([2*self.x_filter_siz, 1, self.c_siz]),
+                    name="Filter_In" )
         XBiasVar = tf.Variable( tf.zeros([self.c_siz]),
             name="Bias_In" )
 
@@ -207,7 +214,7 @@ class ButterflyLayer1D(tf.keras.layers.Layer):
             for itk in range(0,2**lvl):
                 varLabel = "LVL_%02d_%04d" % (lvl, itk)
                 filterVar = tf.Variable(
-                    tf.random.normal([2,self.c_siz,self.c_siz],stddev=0.3),
+                    randfun([2,self.c_siz,self.c_siz]),
                     name="Filter_"+varLabel)
                 biasVar = tf.Variable(tf.zeros([self.c_siz]),
                     name="Bias_"+varLabel )
@@ -222,7 +229,7 @@ class ButterflyLayer1D(tf.keras.layers.Layer):
             for itk in range(0,2**self.Lx1):
                 varLabel = "LVL_%02d_%04d" % (lvl, itk)
                 filterVar = tf.Variable(
-                    tf.random.normal([2,self.c_siz,self.c_siz],stddev=0.3),
+                    randfun([2,self.c_siz,self.c_siz]),
                     name="Filter_"+varLabel )
                 biasVar = tf.Variable(tf.zeros([self.c_siz]),
                     name="Bias_"+varLabel )
@@ -239,8 +246,7 @@ class ButterflyLayer1D(tf.keras.layers.Layer):
             for itx in range(0,2**self.Lk4):
                 varLabel = "LVL_Mid_%04d_%04d" % (itk,itx)
                 tmpMidDenseVars.append( tf.Variable(
-                        tf.random.normal(
-                        [self.c_siz,self.c_siz],stddev=0.3),
+                        randfun([self.c_siz,self.c_siz]),
                         name="Dense_"+varLabel ))
                 tmpMidBiasVars.append(tf.Variable(tf.zeros([self.c_siz]),
                         name="Bias_"+varLabel ))
@@ -253,8 +259,7 @@ class ButterflyLayer1D(tf.keras.layers.Layer):
             for itx in range(0,2**(self.Lk4+1)):
                 varLabel = "LVL_%02d_%04d" % (lvl, itx)
                 filterVar = tf.Variable(
-                        tf.random.normal(
-                        [1,self.c_siz,self.c_siz],stddev=0.3),
+                        randfun([1,self.c_siz,self.c_siz]),
                         name="Filter_"+varLabel )
                 biasVar = tf.Variable(tf.zeros([self.c_siz]),
                         name="Bias_"+varLabel )
@@ -269,8 +274,7 @@ class ButterflyLayer1D(tf.keras.layers.Layer):
             for itx in range(0,2**(self.L-lvl+1)):
                 varLabel = "LVL_%02d_%04d" % (lvl, itx)
                 filterVar = tf.Variable(
-                        tf.random.normal(
-                        [2,self.c_siz,self.c_siz],stddev=0.3),
+                        randfun([2,self.c_siz,self.c_siz]),
                         name="Filter_"+varLabel )
                 biasVar = tf.Variable(tf.zeros([self.c_siz]),
                         name="Bias_"+varLabel )
@@ -280,13 +284,13 @@ class ButterflyLayer1D(tf.keras.layers.Layer):
             BiasVars.append(list(tmpBiasVars))
 
         if self.otype == "r":
-            KFilterVar = tf.Variable( tf.random.normal(
-                [1, self.c_siz, self.k_filter_siz],stddev=0.3),
-                name="Filter_Out" )
+            KFilterVar = tf.Variable(
+                    randfun([1, self.c_siz, self.k_filter_siz]),
+                    name="Filter_Out" )
         else:
-            KFilterVar = tf.Variable( tf.random.normal(
-                [1, self.c_siz, 2*self.k_filter_siz],stddev=0.3),
-                name="Filter_Out" )
+            KFilterVar = tf.Variable(
+                    randfun([1, self.c_siz, 2*self.k_filter_siz]),
+                    name="Filter_Out" )
 
         return XFilterVar, XBiasVar, FilterVars, BiasVars, \
                 MidDenseVars, MidBiasVars, KFilterVar

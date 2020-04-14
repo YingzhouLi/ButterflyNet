@@ -1,0 +1,39 @@
+{
+    "neural network": {
+        "neural network type": "ibnet",
+        "task layer type": "singlefullyconnect",
+        "dense width": 400,
+        "N": 256,
+        "channel size": 16,
+        "in type": "r",
+        "num of layers before switch": 3,
+        "num of layers after switch": 1,
+        "initializer": "dft",
+        "input range": [0, 1],
+        "output range": [0, 16]
+    },
+    "data set": {
+        "data set type": "energy gaussian smooth",
+        "energy gaussian smooth": {
+            "gaussian means": [0, 0],
+            "gaussian stds": [5, 5]
+        }
+    },
+    "train and test": {
+        "batch size": 256,
+        "num of test data": 1000,
+        "max num of iteration": 5,
+        "report frequency": 1,
+        "adam": {
+            "learning rate": "exponential decay",
+            "beta1": 0.9,
+            "beta2": 0.999
+        },
+        "exponential decay": {
+            "initial learning rate": 1e-9,
+            "decay steps": 100,
+            "decay rate": 0.985
+        },
+        "save folder path": "./saved_model"
+    }
+}
