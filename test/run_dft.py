@@ -148,9 +148,8 @@ elif ds_type.lower() == 'dft gaussian smooth':
 dataset.batch_size(batch_siz)
 
 def compute_loss(y,ytrue):
-    nfrac = tf.reduce_sum(tf.math.squared_difference(y,ytrue),axis=[1])
-    dfrac = tf.reduce_sum(tf.square(ytrue), axis=[1])
-    return tf.reduce_mean(tf.divide(nfrac,dfrac))
+    return tf.reduce_mean(
+            tf.reduce_sum(tf.math.squared_difference(y,ytrue),axis=[1])/N)
 
 def compute_relative_error(y,ytrue):
     nfrac = tf.reduce_sum(tf.math.squared_difference(y,ytrue),axis=[1])
@@ -176,7 +175,7 @@ optimizer = tf.keras.optimizers.Adam(learning_rate=learn_rate,
 
 #=========================================================
 #----- Step by Step Training
-#@tf.function
+@tf.function
 def train_one_step(model, optimizer, x, ytrue):
     with tf.GradientTape() as tape:
         y = model(x)

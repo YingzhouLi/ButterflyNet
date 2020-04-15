@@ -70,10 +70,10 @@ for nn_type in nn_type_list:
                             = namefolder
                     if init == 'dft':
                         paras['train and test']['max num of iteration'] \
-                                = 50000
+                                = 20000
                         paras['train and test']['exponential decay'] \
                                 ['initial learning rate'] \
-                                = 2e-5
+                                = 1e-4
                     else:
                         paras['train and test']['max num of iteration'] \
                                 = 50000

@@ -4,7 +4,7 @@ import json
 import numpy as np
 
 nn_type_list  = ['bnet', 'ibnet']
-c_siz_list    = [12, 16]
+c_siz_list    = [16]
 Lk_list       = range(1,4)
 init_list     = ['dft', 'glorot_uniform']
 freq_list     = [[0,128],[256,384]]
@@ -73,7 +73,7 @@ for nn_type in nn_type_list:
                                 = 20000
                         paras['train and test']['exponential decay'] \
                                 ['initial learning rate'] \
-                                = 2e-5
+                                = 1e-4
                     else:
                         paras['train and test']['max num of iteration'] \
                                 = 50000
