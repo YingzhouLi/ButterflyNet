@@ -14,7 +14,7 @@
         "data set type": "dft gaussian smooth",
         "dft gaussian smooth": {
             "gaussian means": [0, 0],
-            "gaussian stds": [200, 200]
+            "gaussian stds": [500, 500]
         }
     },
     "train and test": {
