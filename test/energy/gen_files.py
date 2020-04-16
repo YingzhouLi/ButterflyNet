@@ -70,7 +70,7 @@ for nn_type in nn_type_list:
                     if init == 'dft':
                         paras['train and test']['max num of iteration'] \
                                 = 20000
-                        if task == 'sqr':
+                        if taskstr == 'sqr':
                             paras['train and test']['exponential decay'] \
                                     ['initial learning rate'] \
                                     = 1e-4
