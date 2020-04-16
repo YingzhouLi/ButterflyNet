@@ -182,7 +182,7 @@ optimizer = tf.keras.optimizers.Adam(learning_rate=learn_rate,
 
 #=========================================================
 #----- Step by Step Training
-#@tf.function
+@tf.function
 def train_one_step(model, optimizer, x, ytrue):
     with tf.GradientTape() as tape:
         y = model(x)
