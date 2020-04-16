@@ -2,7 +2,7 @@
     "neural network": {
         "neural network type": "bnet",
         "task layer type": "singlefullyconnect",
-        "dense width": 1000,
+        "dense width": 256,
         "N": 1024,
         "channel size": 16,
         "in type": "r",
