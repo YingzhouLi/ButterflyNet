@@ -16,12 +16,15 @@ class InflatedButterflyNet1D(tf.keras.Model):
 
         self.task_layer_type = task_layer_type
         if self.task_layer_type.lower() == 'squaresum':
-            self.squaresumlayer = layers.SquareSumLayer([out_siz],
-                    initializer)
+            if out_range[0] != 0:
+                self.squaresumlayer = layers.SquareSumLayer([out_siz])
+            else:
+                self.squaresumlayer = layers.SquareSumLayer([out_siz],
+                        initializer)
         elif self.task_layer_type.lower() == 'singlefullyconnect':
             self.singlefullyconnectlayer = \
                     layers.SingleFullyConnectLayer([out_siz],
-                            task_units, initializer)
+                            task_units)
 
     def call(self, in_data):
         out = self.iblayer1d(in_data)
