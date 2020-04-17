@@ -146,11 +146,15 @@ model.summary()
 
 def magfunc(x):
     return out_siz*math.sqrt(N)*gaussianfun(x, g_means, g_stds)
+def energy_weightfunc(k):
+    return np.divide(1.0,np.square(np.array(k)-k_range[0]))
 if ds_type.lower() == 'energy':
-    dataset = datasets.Energy1D(N, in_type, x_range=x_range, k_range=k_range)
+    dataset = datasets.Energy1D(N, in_type, x_range=x_range,
+            k_range=k_range, energy_weightfunc=energy_weightfunc)
 elif ds_type.lower() == 'energy gaussian smooth':
     dataset = datasets.Energy1D(N, in_type, k_magfunc = magfunc,
-            x_range=x_range, k_range=k_range)
+            x_range=x_range, k_range=k_range,
+            energy_weightfunc=energy_weightfunc)
 dataset.batch_size(batch_siz)
 
 def compute_loss(y,ytrue):
