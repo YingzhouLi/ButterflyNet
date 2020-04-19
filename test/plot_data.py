@@ -79,26 +79,26 @@ elif ds_type.lower() == 'dft gaussian smooth':
 if save_path:
     x, ytrue = dataset.gen_data(1)
     if (io_type.lower() == 'r2r') or (io_type.lower() == 'r2c'):
-        plt.plot(x[0])
+        plt.plot(np.arange(0,1,1.0/N), x[0])
         plt.savefig(save_path+'/xreal.pdf')
         plt.clf()
     else:
-        plt.plot(x[0][range(0,in_siz,2)])
+        plt.plot(np.arange(0,1,1.0/N), x[0][range(0,in_siz,2)])
         plt.savefig(save_path+'/xreal.pdf')
         plt.clf()
-        plt.plot(x[0][range(1,in_siz,2)])
+        plt.plot(np.arange(0,1,1.0/N), x[0][range(1,in_siz,2)])
         plt.savefig(save_path+'/ximag.pdf')
         plt.clf()
 
     if (io_type.lower() == 'r2r') or (io_type.lower() == 'c2r'):
-        plt.plot(ytrue[0])
+        plt.plot(np.arange(k_range[0], k_range[1], 1), ytrue[0])
         plt.savefig(save_path+'/yreal.pdf')
         plt.clf()
     else:
-        plt.plot(ytrue[0][range(0,out_siz,2)])
+        plt.plot(np.arange(k_range[0], k_range[1], 1), ytrue[0][range(0,out_siz,2)])
         plt.savefig(save_path+'/yreal.pdf')
         plt.clf()
-        plt.plot(ytrue[0][range(1,out_siz,2)])
+        plt.plot(np.arange(k_range[0], k_range[1], 1), ytrue[0][range(1,out_siz,2)])
         plt.savefig(save_path+'/yimag.pdf')
         plt.clf()
 
