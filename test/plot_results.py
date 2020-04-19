@@ -11,6 +11,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
+from matplotlib.ticker import EngFormatter
 from itertools import product
 
 from butterflynet import models
@@ -26,6 +27,7 @@ def get_testrelerr(save_path):
 
 
 figure_path = 'figures'
+plt.rcParams.update({'font.size': 18})
 
 Lk_list = ['Lk1', 'Lk2', 'Lk3']
 
@@ -48,8 +50,9 @@ for Lk in Lk_list:
         plt.ylabel('Relative Error')
     plt.legend(['BNet-prefix', 'IBNet-prefix',
         'BNet-random', 'IBNet-random'])
+    plt.tight_layout()
     plt.savefig(figure_path+'/trans'+Lk+'.pdf')
-    plt.cla()
+    plt.clf()
 
 nn_list = ['bnet', 'ibnet']
 prefix_list = ['prefix', 'random']
@@ -66,9 +69,11 @@ for nn in nn_list:
             plt.ylim([8e-3, 1.8])
         plt.xlabel('Iteration')
         plt.ylabel('Relative Error')
+        plt.gca().xaxis.set_major_formatter(EngFormatter())
+        plt.tight_layout()
         plt.savefig(figure_path + '/conv-dftsmooth-low_freq-' \
                 + nn + '-Lk1-'+prefix+'.pdf')
-        plt.cla()
+        plt.clf()
 
 
 ds_list     = ['dft', 'dftsmooth']
@@ -91,5 +96,18 @@ for ds, freq in product(ds_list, freq_list):
     plt.ylabel('Relative Error')
     plt.legend(['BNet-prefix', 'IBNet-prefix',
         'BNet-random', 'IBNet-random'])
+    plt.tight_layout()
     plt.savefig(figure_path+'/testerr-'+ds+'-'+freq+'.pdf')
-    plt.cla()
+    plt.clf()
+
+ds_list     = ['dft', 'dftsmooth']
+freq_list   = ['low_freq', 'high_freq']
+os.makedirs('_tmp',  exist_ok=True)
+for ds, freq in product(ds_list, freq_list):
+    json_file = ds + '/' + freq + \
+        '/bnet/channel_size16/Lk1/prefix/para.json'
+    os.system('python3 plot_data.py '+json_file+' _tmp/')
+    os.system('cp _tmp/xreal.pdf ' + figure_path \
+            + '/xreal-' + ds + '-' + freq + '.pdf')
+    os.system('cp _tmp/yreal.pdf ' + figure_path \
+            + '/yreal-' + ds + '-' + freq + '.pdf')

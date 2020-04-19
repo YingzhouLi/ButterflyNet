@@ -15,6 +15,8 @@ from butterflynet import models
 from butterflynet import datasets
 from butterflynet.utils import gaussianfun
 
+plt.rcParams.update({'font.size': 18})
+
 json_file = open(sys.argv[1])
 paras = json.load(json_file)
 
@@ -67,6 +69,8 @@ if ds_type.lower() == 'dft gaussian smooth':
 print("")
 
 save_path   = ttparas.get('save folder path', [])
+if len(sys.argv) > 2:
+    save_path = sys.argv[2]
 
 def magfunc(x):
     return out_siz/2*math.sqrt(N)*gaussianfun(x, g_means, g_stds)
