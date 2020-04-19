@@ -15,11 +15,8 @@ class ButterflyNet1D(tf.keras.Model):
                 initializer, in_range, out_range)
         self.task_layer_type = task_layer_type
         if self.task_layer_type.lower() == 'squaresum':
-            if out_range[0] != 0:
-                self.squaresumlayer = layers.SquareSumLayer([out_siz])
-            else:
-                self.squaresumlayer = layers.SquareSumLayer([out_siz],
-                        initializer)
+            self.squaresumlayer = layers.SquareSumLayer([out_siz],
+                    initializer)
         elif self.task_layer_type.lower() == 'singlefullyconnect':
             self.singlefullyconnectlayer = \
                     layers.SingleFullyConnectLayer([out_siz],
