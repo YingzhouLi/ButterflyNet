@@ -31,6 +31,24 @@ def fexpsign(f):
 def fman(f):
     return f/10**fexp(f)
 
+def get_norms(save_path):
+    with open(save_path+'/output.out', 'r') as f_read:
+        for line in f_read.readlines():
+            if 'norm1' in line:
+                break
+    norm1 = float(line.split()[1])
+    with open(save_path+'/output.out', 'r') as f_read:
+        for line in f_read.readlines():
+            if 'norm2' in line:
+                break
+    norm2 = float(line.split()[1])
+    with open(save_path+'/output.out', 'r') as f_read:
+        for line in f_read.readlines():
+            if 'norminf' in line:
+                break
+    norminf = float(line.split()[1])
+    return norm1, norm2, norminf
+
 def get_numpara(save_path):
     with open(save_path+'/output.out', 'r') as f_read:
         for line in f_read.readlines():
@@ -62,6 +80,44 @@ def get_testrelerr(save_path):
     last_line = last_line.replace(',', ' ')
     return float(last_line.split()[6])
 
+
+freq_list     = [64,256]
+Lk_list       = range(1,4)
+
+for itL in range(0,3):
+    print("\\midrule")
+    for itLk in range(0,len(Lk_list)):
+        Lk = Lk_list[itLk]
+        for freq_max in freq_list:
+            Lmax = int(np.log2(freq_max))
+            L_list = range(Lmax-2, Lmax+1)
+            L = L_list[itL]
+
+            freqstr = 'freq'+str(freq_max)
+            Lstr    = 'L'+str(L)
+            Lkstr   = 'Lk'+str(Lk)
+            save_path = 'approx' \
+                    + '/' + freqstr \
+                    + '/' + Lstr \
+                    + '/' + Lkstr
+
+            n1, n2, ninf = get_norms(save_path)
+
+            if freq_max != freq_list[0]:
+                print("&")
+
+            if Lk == 1:
+                print("\\multirow{3}{*}{%d}" % L)
+
+            print(("& %2d & %4.2f\\np{e%s}%d & %4.2f\\np{e%s}%d " \
+                    +"& %4.2f\\np{e%s}%d ") \
+                    % (Lk, fman(n1), fexpsign(n1), fexpabs(n1), \
+                       fman(n2), fexpsign(n2), fexpabs(n2), \
+                       fman(ninf), fexpsign(ninf), fexpabs(ninf)))
+
+        print("\\\\")
+
+print("========================================================")
 
 ds_list     = ['dft', 'dftsmooth']
 freq_list   = ['low_freq', 'high_freq']
