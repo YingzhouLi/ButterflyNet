@@ -15,7 +15,7 @@ from butterflynet import models
 from butterflynet import datasets
 from butterflynet.utils import gaussianfun
 
-plt.rcParams.update({'font.size': 18})
+plt.rcParams.update({'font.size': 16})
 
 json_file = open(sys.argv[1])
 paras = json.load(json_file)

@@ -27,7 +27,7 @@ def get_testrelerr(save_path):
 
 
 figure_path = 'figures'
-plt.rcParams.update({'font.size': 18})
+plt.rcParams.update({'font.size': 16})
 
 Lk_list = ['Lk1', 'Lk2', 'Lk3']
 
@@ -46,7 +46,7 @@ for Lk in Lk_list:
         plt.errorbar(gmeanshist, relerrhist, yerr=relstdhist, fmt='-')
         plt.yscale('log', nonposy='clip')
         plt.ylim([8e-6, 1.8])
-        plt.xlabel('Gaussian Mean')
+        plt.xlabel('Gaussian Center')
         plt.ylabel('Relative Error')
     plt.legend(['BNet-prefix', 'IBNet-prefix',
         'BNet-random', 'IBNet-random'])
@@ -94,8 +94,9 @@ for ds, freq in product(ds_list, freq_list):
     plt.gca().xaxis.set_major_locator(MaxNLocator(integer=True))
     plt.xlabel('$L_\\xi$')
     plt.ylabel('Relative Error')
-    plt.legend(['BNet-prefix', 'IBNet-prefix',
-        'BNet-random', 'IBNet-random'])
+    if (ds == 'dft') and (freq == 'low_freq'):
+        plt.legend(['BNet-prefix', 'IBNet-prefix',
+            'BNet-random', 'IBNet-random'])
     plt.tight_layout()
     plt.savefig(figure_path+'/testerr-'+ds+'-'+freq+'.pdf')
     plt.clf()
