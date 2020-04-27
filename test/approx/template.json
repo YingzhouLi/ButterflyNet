@@ -1,0 +1,13 @@
+{
+    "neural network": {
+        "neural network type": "bnet",
+        "N": 1024,
+        "channel size": 32,
+        "inout type": "r2c",
+        "num of layers before switch": 2,
+        "num of layers after switch": 2,
+        "initializer": "dft",
+        "input range": [0, 1],
+        "output range": [0, 64]
+    }
+}
