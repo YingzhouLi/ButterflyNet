@@ -34,10 +34,10 @@ for freq_max in freq_list:
             namefolder = script_folder \
                     + '/' + freqstr \
                     + '/' + Lstr \
-                    + '/' + Lkstr \
+                    + '/' + Lkstr
             namestr = freqstr \
                     + '_' + Lstr \
-                    + '_' + Lkstr \
+                    + '_' + Lkstr
 
             paras['neural network']['num of layers before switch'] \
                     = L-Lk
@@ -60,5 +60,5 @@ for freq_max in freq_list:
                 sh_file.write('| tee %s/output.out'%namefolder)
             os.chmod(shpath, 0o775)
 
-            with open(allpath,'w+') as sh_file:
-                sh_file.write('./%s\n', %(namestr+'.sh'))
+            with open(allpath,'a+') as sh_file:
+                sh_file.write('./%s\n'%(namestr+'.sh'))
